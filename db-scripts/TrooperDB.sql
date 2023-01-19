@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS gamers_applying_to_jobs;
+DROP TABLE IF EXISTS gamers_jobs;
 DROP TABLE IF EXISTS gamer_games;
 DROP TABLE IF EXISTS gamer_roles;
 DROP TABLE IF EXISTS job_roles;
@@ -99,21 +99,22 @@ CREATE TABLE job_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE gamers_applying_to_jobs (
+CREATE TABLE gamers_jobs (
     gamer_id CHAR(36) NOT NULL,
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
-    request_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    application_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    recruitment_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
     FOREIGN KEY (gamer_id) REFERENCES gamers(id),
     FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
 
 /** DELIMITER //
 CREATE TRIGGER update_chosen_gamer
-AFTER UPDATE ON gamers_applying_to_jobs
+AFTER UPDATE ON gamers_jobs
 FOR EACH ROW
 BEGIN
-   IF NEW.request_state = 'Approved' THEN
+   IF NEW.application_state = 'Approved' THEN
        UPDATE jobs
        SET chosen_gamer_id = NEW.gamer_id
        WHERE id = NEW.job_id;
