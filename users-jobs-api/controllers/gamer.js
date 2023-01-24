@@ -70,6 +70,18 @@ exports.getGamer = (req, res, next) => {
 	);
 };
 
+exports.checkUserExists = (username) => {
+	let query = "SELECT 1 FROM gamers WHERE LOWER(username) = LOWER(?)";
+	connection.query(query, [username], function (error, results) {
+		if (error) throw error;
+		if (results.length > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	});
+};
+
 exports.updateGamer = (req, res, next) => {
 	if (!req.params.id || !req.body || Object.keys(req.body).length === 0) {
 		return next(new AppError("No gamer id or form data found", 404));
@@ -81,11 +93,16 @@ exports.updateGamer = (req, res, next) => {
 		req.body.profile_type !== "Guild Manager"
 	)
 		return next(new AppError("Incorrect type of profile", 400));
+
 	let query = "UPDATE gamers SET ";
 	let values = [];
 	if (req.body.username) {
-		query += "username = ?, ";
-		values.push(req.body.username);
+		if (!this.checkUserExists(req.body.username)) {
+			query += "username = ?, ";
+			values.push(req.body.username);
+		} else {
+			return next(new AppError("Username already used", 400));
+		}
 	}
 	if (req.body.profile_type) {
 		query += "profile_type = ?, ";
@@ -120,16 +137,28 @@ exports.updateGamer = (req, res, next) => {
 		values.push(req.body.link_facebook);
 	}
 	if (req.body.min_hour_rate) {
-		query += "min_hour_rate = ?, ";
-		values.push(req.body.min_hour_rate);
+		if (req.body.min_hour_rate > 0) {
+			query += "min_hour_rate = ?, ";
+			values.push(req.body.min_hour_rate);
+		} else {
+			return next(new AppError("Wrong minimum hour rate value", 400));
+		}
 	}
 	if (req.body.hours_per_day) {
-		query += "hours_per_day = ?, ";
-		values.push(req.body.hours_per_day);
+		if (req.body.hours_per_day < 24 && req.body.hours_per_day > 0) {
+			query += "hours_per_day = ?, ";
+			values.push(req.body.hours_per_day);
+		} else {
+			return next(new AppError("Wrong hours per day value", 400));
+		}
 	}
 	if (req.body.total_earned) {
-		query += "total_earned = ?, ";
-		values.push(req.body.total_earned);
+		if (req.body.total_earned > 0) {
+			query += "total_earned = ?, ";
+			values.push(req.body.total_earned);
+		} else {
+			return next(new AppError("Wrong total earned value", 400));
+		}
 	}
 	query = query.slice(0, -2); // Removing the last comma and space
 	query += " WHERE id = ?";
