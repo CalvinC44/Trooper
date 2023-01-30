@@ -1,6 +1,7 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
 
+// function to get all Jobs
 exports.getAllJobs = (req, res, next) => {
 	connection.query("SELECT * FROM jobs", function (err, data, fields) {
 		if (err) return next(new AppError(err));
@@ -29,6 +30,7 @@ exports.createJob = (req, res, next) => {
 	);
 };
 
+//function to get specific job using its id
 exports.getJob = (req, res, next) => {
 	if (!req.params.id) {
 		return next(new AppError("No job id found", 404));
