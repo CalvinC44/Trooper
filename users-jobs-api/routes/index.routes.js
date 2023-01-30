@@ -1,15 +1,29 @@
 const express = require("express");
-const controllers = require("../controllers/gamer");
+const gamerControllers = require("../controllers/gamer");
+const jobControllers = require("../controllers/job");
 const router = express.Router();
 
+//routes for gamers
 router
 	.route("/gamers")
-	.get(controllers.getAllGamers)
-	.post(controllers.createGamer);
+	.get(gamerControllers.getAllGamers)
+	.post(gamerControllers.createGamer);
 router
 	.route("/gamers/:id")
-	.get(controllers.getGamer)
-	.put(controllers.updateGamer)
-	.delete(controllers.deleteGamer);
-router.route("/gamer/id").get(controllers.getGamerId);
+	.get(gamerControllers.getGamer)
+	.put(gamerControllers.updateGamer)
+	.delete(gamerControllers.deleteGamer);
+router.route("/gamer/id").get(gamerControllers.getGamerId);
+
+//routes for jobs
+router
+	.route("/jobs")
+	.get(jobControllers.getAllJobs)
+	.post(jobControllers.createJob);
+router
+	.route("/jobs/:id")
+	.get(jobControllers.getJob)
+	.put(jobControllers.updateJob)
+	.delete(jobControllers.deleteJob);
+
 module.exports = router;
