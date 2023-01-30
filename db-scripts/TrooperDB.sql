@@ -26,7 +26,7 @@ CREATE TABLE gamers (
     
     /** gamers specific columns **/
 	min_hour_rate DECIMAL(7.2),
-    hours_per_day DECIMAL(3,1),
+    hours_per_day INT,
     total_earned DECIMAL(7,2)
     
     /** guild master specific columns **/
@@ -59,8 +59,8 @@ CREATE TABLE jobs (
     
     short_description VARCHAR(255),
     description TEXT,
-    game_name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (game_name) REFERENCES games(name),
+    game_id INT,
+    FOREIGN KEY (game_id) REFERENCES games(id),
     job_state ENUM('Available', 'In progress', 'Done') NOT NULL DEFAULT 'Available',
     
     payment_amount DECIMAL(10,2) NOT NULL,
