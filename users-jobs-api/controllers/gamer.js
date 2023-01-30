@@ -13,11 +13,11 @@ exports.getAllGamers = (req, res, next) => {
 	});
 };
 
-// function to create gamer, using username and profile_type
+// function to create gamer, require username and profile_type, others are optional
 exports.createGamer = (req, res, next) => {
 	if (!req.body) return next(new AppError("No form data found", 404));
 	if (!req.body.username) return next(new AppError("No username found", 404));
-	if (this.checkUserExists(req.body.username))
+	if (this.checkUsernameExists(req.body.username))
 		return next(new AppError("Username already exists", 400));
 	if (
 		req.body.profile_type !== "Gamer" &&
@@ -60,6 +60,7 @@ exports.createGamer = (req, res, next) => {
 	}
 	query += ")";
 	console.log(query);
+
 	connection.query(query, values, function (err, result) {
 		if (err) return next(new AppError(err, 500));
 		res.status(201).json({
@@ -108,7 +109,7 @@ exports.getGamer = (req, res, next) => {
 };
 
 //function to check if a user exists using username return true if exists
-exports.checkUserExists = (username) => {
+exports.checkUsernameExists = (username) => {
 	let query = "SELECT 1 FROM gamers WHERE LOWER(username) = LOWER(?)";
 	connection.query(query, [username], function (error, results) {
 		if (error) throw error;
@@ -125,7 +126,7 @@ exports.updateGamer = (req, res, next) => {
 	if (!req.params.id || !req.body || Object.keys(req.body).length === 0) {
 		return next(new AppError("No gamer id or form data found", 404));
 	}
-	if (this.checkUserExists(req.body.username))
+	if (this.checkUsernameExists(req.body.username))
 		return next(new AppError("Username already exists", 400));
 	if (
 		req.body.profile_type &&
