@@ -66,50 +66,44 @@ exports.createGamer = async (req, res, next) => {
 		if (!req.body) return next(new AppError("No form data found", 404));
 		if (!req.body.username) return next(new AppError("No username found", 404));
 
-		//check attributes using checkAttributes, if error, return error, else do query
-		const error = await checkAttributes(req, res, next);
-		if (error) {
-			return next(new AppError(error, 400));
-		} else {
-			//initiate query and values, username and profile_type are required
-			let query = "INSERT INTO gamers (username, profile_type";
-			let values = [req.body.username, req.body.profile_type];
+		//initiate query and values, username and profile_type are required
+		let query = "INSERT INTO gamers (username, profile_type";
+		let values = [req.body.username, req.body.profile_type];
 
-			//possibility to set other attributes of the gamer
-			const columnMap = {
-				location: "location",
-				birthdate: "birthdate",
-				description: "description",
-				name_discord: "name_discord",
-				link_twitter: "link_twitter",
-				link_linkedin: "link_linkedin",
-				link_facebook: "link_facebook",
-				min_hour_rate: "min_hour_rate",
-				hours_per_day: "hours_per_day"
-			};
+		//possibility to set other attributes of the gamer
+		const columnMap = {
+			location: "location",
+			birthdate: "birthdate",
+			description: "description",
+			name_discord: "name_discord",
+			link_twitter: "link_twitter",
+			link_linkedin: "link_linkedin",
+			link_facebook: "link_facebook",
+			min_hour_rate: "min_hour_rate",
+			hours_per_day: "hours_per_day"
+		};
 
-			Object.keys(columnMap).forEach((key) => {
-				if (req.body[key]) {
-					query += `, ${columnMap[key]}`;
-					values.push(req.body[key]);
-				}
-			});
-
-			query += ") VALUES(?";
-			for (let i = 1; i < values.length; i++) {
-				query += ",?";
+		Object.keys(columnMap).forEach((key) => {
+			if (req.body[key]) {
+				query += `, ${columnMap[key]}`;
+				values.push(req.body[key]);
 			}
-			query += ")";
+		});
 
-			connection.query(query, values, function (err, result) {
-				if (err) return next(new AppError(err, 500));
-				res.status(201).json({
-					status: "success",
-					message: "gamer created!",
-					data: result
-				});
-			});
+		query += ") VALUES(?";
+		for (let i = 1; i < values.length; i++) {
+			query += ",?";
 		}
+		query += ")";
+
+		connection.query(query, values, function (err, result) {
+			if (err) return next(new AppError(err, 500));
+			res.status(201).json({
+				status: "success",
+				message: "gamer created!",
+				data: result
+			});
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
@@ -122,51 +116,45 @@ exports.updateGamer = async (req, res, next) => {
 			return next(new AppError("No gamer id or form data found", 404));
 		}
 
-		//check attributes using checkAttributes, if error, return error, else do query
-		const error = await checkAttributes(req, res, next);
-		if (error) {
-			return next(new AppError(error, 400));
-		} else {
-			//initiate query and values
-			let query = "UPDATE gamers SET ";
-			let values = [];
+		//initiate query and values
+		let query = "UPDATE gamers SET ";
+		let values = [];
 
-			const columnMap = {
-				username: "username",
-				profile_type: "profile_type",
-				birthdate: "birthdate",
-				description: "description",
-				location: "location",
-				birthdate: "birthdate",
-				description: "description",
-				name_discord: "name_discord",
-				link_twitter: "link_twitter",
-				link_linkedin: "link_linkedin",
-				link_facebook: "link_facebook",
-				min_hour_rate: "min_hour_rate",
-				hours_per_day: "hours_per_day",
-				total_earned: "total_earned"
-			};
+		const columnMap = {
+			username: "username",
+			profile_type: "profile_type",
+			birthdate: "birthdate",
+			description: "description",
+			location: "location",
+			birthdate: "birthdate",
+			description: "description",
+			name_discord: "name_discord",
+			link_twitter: "link_twitter",
+			link_linkedin: "link_linkedin",
+			link_facebook: "link_facebook",
+			min_hour_rate: "min_hour_rate",
+			hours_per_day: "hours_per_day",
+			total_earned: "total_earned"
+		};
 
-			Object.keys(columnMap).forEach((key) => {
-				if (req.body[key]) {
-					query += `${columnMap[key]} = ?, `;
-					values.push(req.body[key]);
-				}
+		Object.keys(columnMap).forEach((key) => {
+			if (req.body[key]) {
+				query += `${columnMap[key]} = ?, `;
+				values.push(req.body[key]);
+			}
+		});
+
+		query = query.slice(0, -2); // Removing the last comma and space
+		query += " WHERE id = ?";
+		values.push(req.params.id);
+
+		connection.query(query, values, function (err, data, fields) {
+			if (err) return next(new AppError(err, 500));
+			res.status(200).json({
+				status: "success",
+				message: "gamer updated!"
 			});
-
-			query = query.slice(0, -2); // Removing the last comma and space
-			query += " WHERE id = ?";
-			values.push(req.params.id);
-
-			connection.query(query, values, function (err, data, fields) {
-				if (err) return next(new AppError(err, 500));
-				res.status(200).json({
-					status: "success",
-					message: "gamer updated!"
-				});
-			});
-		}
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
