@@ -4,8 +4,8 @@ require("dotenv").config();
 const password = process.env.PASSWORD;
 
 const connection = mysql.createConnection({
-	host: "localhost",
-	user: "user",
+	host: "trooperdb-test.c9ikqootrb58.eu-west-3.rds.amazonaws.com",
+	user: "admin_trooper",
 	password: password,
 	database: "trooperdb"
 });
