@@ -15,7 +15,7 @@ CREATE TABLE gamers (
     id CHAR(36) PRIMARY KEY NOT NULL DEFAULT (UUID()),
     username VARCHAR(255) NOT NULL UNIQUE,
 	date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    profile_type ENUM('Gamer', 'Recruiter', 'Guild Manager') NOT NULL,
+    profile_type ENUM('Gamer', 'Recruiter', 'Guild Manager') DEFAULT 'Gamer' NOT NULL,
     
 	birthdate DATE,
 	description TEXT,
