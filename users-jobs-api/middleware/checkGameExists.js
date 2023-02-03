@@ -2,22 +2,23 @@ const connection = require("../services/db");
 
 //function to check if a user exists
 async function checkGameExists(userId) {
-	try {
+	return new Promise((resolve, reject) => {
 		connection.query(
 			"SELECT 1 FROM games WHERE id = ?",
 			[userId],
-			function (err, data, fields) {
-				if (err) return next(new AppError(err));
-				if (data.length > 0) {
-					return true;
+			(err, data, fields) => {
+				if (err) {
+					reject(err);
 				} else {
-					return false;
+					if (data.length > 0) {
+						resolve(true);
+					} else {
+						resolve(false);
+					}
 				}
 			}
 		);
-	} catch (err) {
-		return next(new AppError(err, 500));
-	}
+	});
 }
 
 module.exports = checkGameExists;

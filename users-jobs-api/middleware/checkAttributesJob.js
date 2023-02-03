@@ -8,16 +8,18 @@ async function checkAttributesJob(req, res, next) {
 		if (!req.body.recruiter_id) {
 			return next(new AppError("No recruiter_id found", 404));
 		}
-		if (!checkUserExists(req.body.recruiter_id)) {
+		const recruiter_id = await checkUserExists(req.body.recruiter_id);
+		if (!recruiter_id) {
+			console.log(recruiter_id);
 			return next(new AppError("Recruiter user not found", 404));
 		}
 
 		// check if chosen_gamer_id exists if it is set
-		if (
-			req.body.chosen_gamer_id &&
-			!checkUserExists(req.body.chosen_gamer_id)
-		) {
-			return next(new AppError("Chosen gamer user not found", 404));
+		if (req.body.chosen_gamer_id) {
+			const chosen_gamer_id = await checkUserExists(req.body.chosen_gamer_id);
+			if (!chosen_gamer_id) {
+				return next(new AppError("Chosen gamer user not found", 404));
+			}
 		}
 
 		//check if job_state is correct if it is set
@@ -36,8 +38,11 @@ async function checkAttributesJob(req, res, next) {
 		}
 
 		//check if game_id is correct if it is set
-		if (req.body.game_id && !checkGameExists(req.body.game_id)) {
-			return next(new AppError("Incorrect game_id", 400));
+		if (req.body.game_id) {
+			const game_id = await checkGameExists(req.body.game_id);
+			if (!game_id) {
+				return next(new AppError("Incorrect game_id", 400));
+			}
 		}
 		next();
 	} catch (err) {
