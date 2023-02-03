@@ -2,6 +2,7 @@ const express = require("express");
 const gamerControllers = require("../controllers/gamer");
 const jobControllers = require("../controllers/job");
 const checkAttributesGamer = require("../middleware/checkAttributesGamer");
+const checkAttributesJob = require("../middleware/checkAttributesJob");
 const router = express.Router();
 
 //routes for gamers
@@ -20,7 +21,7 @@ router.route("/gamer/id").get(gamerControllers.getGamerId);
 router
 	.route("/jobs")
 	.get(jobControllers.getAllJobs)
-	.post(jobControllers.createJob);
+	.post(checkAttributesJob, jobControllers.createJob);
 router
 	.route("/jobs/:id")
 	.get(jobControllers.getJob)
