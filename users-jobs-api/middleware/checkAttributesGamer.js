@@ -1,7 +1,7 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
 
-async function checkAttributes(req, res, next) {
+async function checkAttributesGamer(req, res, next) {
 	try {
 		//check if username is already taken
 		const existingUser = await new Promise((resolve, reject) => {
@@ -55,4 +55,4 @@ async function checkAttributes(req, res, next) {
 	}
 }
 
-module.exports = checkAttributes;
+module.exports = checkAttributesGamer;
