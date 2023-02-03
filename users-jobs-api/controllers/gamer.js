@@ -66,12 +66,13 @@ exports.createGamer = async (req, res, next) => {
 		if (!req.body) return next(new AppError("No form data found", 404));
 		if (!req.body.username) return next(new AppError("No username found", 404));
 
-		//initiate query and values, username and profile_type are required
-		let query = "INSERT INTO gamers (username, profile_type";
-		let values = [req.body.username, req.body.profile_type];
+		//initiate query and values, username is required
+		let query = "INSERT INTO gamers (username";
+		let values = [req.body.username];
 
 		//possibility to set other attributes of the gamer
 		const columnMap = {
+			profile_type: "profile_type",
 			location: "location",
 			birthdate: "birthdate",
 			description: "description",
