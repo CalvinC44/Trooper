@@ -17,7 +17,7 @@ exports.getAllJobs = async (req, res, next) => {
 	}
 };
 
-//function to create a job, require a name and the recruiter_id, others are optional, job_state is set to Available by default
+//function to create a job, require a job_name and the recruiter_id, others are optional, job_state is set to Available by default
 exports.createJob = async (req, res, next) => {
 	try {
 		if (!req.body) return next(new AppError("No form data found", 404));
@@ -33,7 +33,8 @@ exports.createJob = async (req, res, next) => {
 			description: "description",
 			game_id: "game_id",
 			payment_amount: "payment_amount",
-			gamer_id: "gamer_id"
+			duration: "duration",
+			chosen_gamer_id: "chosen_gamer_id"
 		};
 
 		Object.keys(columnMap).forEach((key) => {
@@ -48,14 +49,14 @@ exports.createJob = async (req, res, next) => {
 			query += ",?";
 		}
 		query += ")";
-		console.log(query);
 
 		connection.query(query, values, function (err, result) {
 			if (err) return next(new AppError(err, 500));
+			const jobId = result.insertId;
 			res.status(201).json({
 				status: "success",
 				message: "job created!",
-				data: result
+				data: { jobId }
 			});
 		});
 	} catch (err) {
