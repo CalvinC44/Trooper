@@ -71,7 +71,7 @@ CREATE TABLE jobs (
     recruiter_id CHAR(36) NOT NULL,
     FOREIGN KEY (recruiter_id) REFERENCES gamers(id),
     
-    chosen_gamer_id CHAR(36) NOT NULL,
+    chosen_gamer_id CHAR(36),
     FOREIGN KEY (chosen_gamer_id) REFERENCES gamers(id)
 );
 
