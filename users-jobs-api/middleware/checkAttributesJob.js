@@ -10,7 +10,6 @@ async function checkAttributesJob(req, res, next) {
 		}
 		const recruiter_id = await checkUserExists(req.body.recruiter_id);
 		if (!recruiter_id) {
-			console.log(recruiter_id);
 			return next(new AppError("Recruiter user not found", 404));
 		}
 
