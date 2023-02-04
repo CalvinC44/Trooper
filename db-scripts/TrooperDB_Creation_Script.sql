@@ -44,9 +44,9 @@ CREATE TABLE gamers (
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL UNIQUE
+    role_name VARCHAR(255) NOT NULL UNIQUE
 );
-INSERT INTO roles (name) VALUES ("farmer"), ("healer"), ("tank"), ("dps"), ("trader"), ("booster");
+INSERT INTO roles (role_name) VALUES ("farmer"), ("healer"), ("tank"), ("dps"), ("trader"), ("booster");
 
 CREATE TABLE games (
     id INT PRIMARY KEY AUTO_INCREMENT,
