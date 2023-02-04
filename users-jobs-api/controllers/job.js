@@ -1,17 +1,20 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
 
-// function to get all Jobs
 exports.getAllJobs = async (req, res, next) => {
 	try {
-		connection.query("SELECT * FROM jobs", function (err, data, fields) {
-			if (err) return next(new AppError(err));
-			res.status(200).json({
-				status: "success",
-				length: data?.length,
-				data: data
-			});
-		});
+		// get all jobs
+		connection.query(
+			`SELECT jobs.*, GROUP_CONCAT(roles.role_name) as roles, GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers FROM jobs LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id LEFT JOIN roles ON jobs_roles.role_id = roles.id LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id AND gamers_jobs_applicants.application_state = 'Approved' LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' GROUP BY jobs.id`,
+			function (err, data, fields) {
+				if (err) return next(new AppError(err));
+				res.status(200).json({
+					status: "success",
+					length: data?.length,
+					data: data
+				});
+			}
+		);
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
@@ -50,14 +53,37 @@ exports.createJob = async (req, res, next) => {
 		}
 		query += ")";
 
+		//query to create the job
 		connection.query(query, values, function (err, result) {
 			if (err) return next(new AppError(err, 500));
-			const jobId = result.insertId;
-			res.status(201).json({
-				status: "success",
-				message: "job created!",
-				data: { jobId }
-			});
+
+			//get the id of the job created and return it
+			connection.query(
+				"SELECT id FROM jobs ORDER BY id DESC LIMIT 1",
+				function (err, data, fields) {
+					if (err) return next(new AppError(err, 500));
+					const job_id = data[0].id;
+
+					if (req.body.roles) {
+						const roleValues = req.body.roles.map((role_id) => [
+							job_id,
+							role_id
+						]);
+
+						const roleQuery =
+							"INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
+						connection.query(roleQuery, [roleValues], function (err, result) {
+							if (err) return next(new AppError(err, 500));
+						});
+					}
+
+					res.status(201).json({
+						status: "success",
+						message: "job created!",
+						job_id: data[0].id
+					});
+				}
+			);
 		});
 	} catch (err) {
 		return next(new AppError(err, 500));
