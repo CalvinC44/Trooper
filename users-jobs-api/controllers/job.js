@@ -59,7 +59,8 @@ exports.createJob = async (req, res, next) => {
 
 			//get the id of the job created and return it
 			connection.query(
-				"SELECT id FROM jobs ORDER BY id DESC LIMIT 1",
+				"SELECT id FROM jobs WHERE recruiter_id = ? ORDER BY id DESC LIMIT 1",
+				[req.body.recruiter_id],
 				function (err, data, fields) {
 					if (err) return next(new AppError(err, 500));
 					const job_id = data[0].id;
