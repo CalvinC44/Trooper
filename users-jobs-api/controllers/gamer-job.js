@@ -10,7 +10,7 @@ exports.getTotalEarned = (req, res, next) => {
 			if (err) return next(new AppError(err, 500));
 			if (data[0].total_earned === null) {
 				connection.query(
-					"SELECT SUM(amount) AS total_earned FROM jobs WHERE gamer_id = ?",
+					"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE gamer_id = ?",
 					[req.params.id],
 					function (err, data, fields) {
 						if (err) return next(new AppError(err, 500));
