@@ -1,10 +1,12 @@
+DROP DATABASE trooperdb;
 CREATE DATABASE IF NOT EXISTS trooperdb;
 USE trooperdb;
 
-DROP TABLE IF EXISTS gamers_jobs;
+DROP TABLE IF EXISTS gamers_jobs_applicants;
+DROP TABLE IF EXISTS gamers_jobs_asked_gamers;
 DROP TABLE IF EXISTS gamer_games;
 DROP TABLE IF EXISTS gamer_roles;
-DROP TABLE IF EXISTS job_roles;
+DROP TABLE IF EXISTS jobs_roles;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS jobs;
 DROP TABLE IF EXISTS games;
@@ -93,7 +95,7 @@ CREATE TABLE gamer_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE job_roles (
+CREATE TABLE jobs_roles (
     job_id CHAR(36) NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (job_id, role_id),
@@ -101,11 +103,19 @@ CREATE TABLE job_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE gamers_jobs (
+CREATE TABLE gamers_jobs_applicants (
     gamer_id CHAR(36) NOT NULL,
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
     application_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    FOREIGN KEY (gamer_id) REFERENCES gamers(id),
+    FOREIGN KEY (job_id) REFERENCES jobs(id)
+);
+
+CREATE TABLE gamers_jobs_asked_gamers (
+    gamer_id CHAR(36) NOT NULL,
+    job_id CHAR(36) NOT NULL,
+    PRIMARY KEY (gamer_id, job_id),
     recruitment_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
     FOREIGN KEY (gamer_id) REFERENCES gamers(id),
     FOREIGN KEY (job_id) REFERENCES jobs(id)
