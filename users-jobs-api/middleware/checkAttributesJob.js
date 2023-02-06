@@ -46,6 +46,13 @@ async function checkAttributesJob(req, res, next) {
 		}
 
 		//check if duration is an number and is correct if it is set
+		if (
+			req.body.duration &&
+			req.body.duration < 0 &&
+			isNaN(req.body.duration)
+		) {
+			return next(new AppError("Incorrect duration", 400));
+		}
 
 		//check if roles id exist, are correct if they are set
 		if (req.body.roles) {
