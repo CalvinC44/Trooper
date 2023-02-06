@@ -47,6 +47,11 @@ exports.createJob = async (req, res, next) => {
 			}
 		});
 
+		if (req.body.chosen_gamer_id) {
+			query += `, job_state`;
+			values.push("In progress");
+		}
+
 		query += ") VALUES(?";
 		for (let i = 1; i < values.length; i++) {
 			query += ",?";
