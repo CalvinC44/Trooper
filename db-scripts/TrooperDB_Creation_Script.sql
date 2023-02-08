@@ -57,7 +57,7 @@ CREATE TABLE games (
 INSERT INTO games (name) VALUES ("GTA V"), ("FIFA"), ("LOL"), ("WOW"), ("Hearthstone"), ("COD");
 
 CREATE TABLE jobs (
-    id CHAR(36) PRIMARY KEY NOT NULL DEFAULT (UUID()),
+    id CHAR(36) PRIMARY KEY NOT NULL,
     job_name VARCHAR(255) NOT NULL,
     date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
@@ -67,7 +67,7 @@ CREATE TABLE jobs (
     FOREIGN KEY (game_id) REFERENCES games(id),
     job_state ENUM('Available', 'In progress', 'Done') NOT NULL DEFAULT 'Available',
     
-    payment_amount DECIMAL(10,2) NOT NULL,
+    payment_amount DECIMAL(10,2),
     duration DECIMAL(3,1),
     
     recruiter_id CHAR(36) NOT NULL,
