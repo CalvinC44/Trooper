@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS guilds;
 DROP TABLE IF EXISTS gamers; 
 
 CREATE TABLE gamers (
-    id CHAR(36) PRIMARY KEY NOT NULL DEFAULT (UUID()),
+    id CHAR(36) PRIMARY KEY NOT NULL,
     username VARCHAR(255) NOT NULL UNIQUE,
 	date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     profile_type ENUM('Gamer', 'Recruiter', 'Guild Manager') DEFAULT 'Gamer' NOT NULL,
