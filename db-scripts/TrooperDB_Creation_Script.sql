@@ -4,8 +4,8 @@ USE trooperdb;
 
 DROP TABLE IF EXISTS gamers_jobs_applicants;
 DROP TABLE IF EXISTS gamers_jobs_asked_gamers;
-DROP TABLE IF EXISTS gamer_games;
-DROP TABLE IF EXISTS gamer_roles;
+DROP TABLE IF EXISTS gamers_games;
+DROP TABLE IF EXISTS gamers_roles;
 DROP TABLE IF EXISTS jobs_roles;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS jobs;
@@ -52,9 +52,9 @@ INSERT INTO roles (role_name) VALUES ("farmer"), ("healer"), ("tank"), ("dps"), 
 
 CREATE TABLE games (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL UNIQUE
+    game_name VARCHAR(255) NOT NULL UNIQUE
 );
-INSERT INTO games (name) VALUES ("GTA V"), ("FIFA"), ("LOL"), ("WOW"), ("Hearthstone"), ("COD");
+INSERT INTO games (game_name) VALUES ("GTA V"), ("FIFA"), ("LOL"), ("WOW"), ("Hearthstone"), ("COD");
 
 CREATE TABLE jobs (
     id CHAR(36) PRIMARY KEY NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE jobs (
 
 
 
-CREATE TABLE gamer_games (
+CREATE TABLE gamers_games (
 	gamer_id CHAR(36) NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (gamer_id, game_id),
@@ -87,7 +87,7 @@ CREATE TABLE gamer_games (
     FOREIGN KEY (game_id) REFERENCES games(id)
 );
 
-CREATE TABLE gamer_roles (
+CREATE TABLE gamers_roles (
 	gamer_id CHAR(36) NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (gamer_id, role_id),
