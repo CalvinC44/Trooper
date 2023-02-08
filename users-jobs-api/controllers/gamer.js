@@ -1,5 +1,6 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
+const uuidv4 = require("uuid").v4;
 
 //function to get all gamers
 exports.getAllGamers = async (req, res, next) => {
@@ -66,9 +67,12 @@ exports.createGamer = async (req, res, next) => {
 		if (!req.body) return next(new AppError("No form data found", 404));
 		if (!req.body.username) return next(new AppError("No username found", 404));
 
+		//generate a unique id for the gamer
+		const gamer_id = uuidv4();
+
 		//initiate query and values, username is required
-		let query = "INSERT INTO gamers (username";
-		let values = [req.body.username];
+		let query = "INSERT INTO gamers (id, username";
+		let values = [gamer_id, req.body.username];
 
 		//possibility to set other attributes of the gamer
 		const columnMap = {
@@ -102,7 +106,7 @@ exports.createGamer = async (req, res, next) => {
 			res.status(201).json({
 				status: "success",
 				message: "gamer created!",
-				data: result
+				gamer_id: gamer_id
 			});
 		});
 	} catch (err) {
