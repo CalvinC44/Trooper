@@ -2,16 +2,24 @@ const AppError = require("../utils/appError");
 const checkUserExists = require("../middleware/checkUserExists");
 const checkGameExists = require("./checkGameExists");
 const checkRoleExists = require("./checkRoleExists");
+const checkJobExists = require("./checkJobExists");
 
 async function checkAttributesJob(req, res, next) {
 	try {
-		//check if recruiter_id is set and exists
-		if (!req.body.recruiter_id) {
-			return next(new AppError("No recruiter_id found", 404));
+		//check if job exists if it is set in the params
+		if (req.params.id) {
+			const jobExists = await checkJobExists(req.params.id);
+			if (!jobExists) {
+				return next(new AppError("Job not found", 404));
+			}
 		}
-		const recruiter_id = await checkUserExists(req.body.recruiter_id);
-		if (!recruiter_id) {
-			return next(new AppError("Recruiter user not found", 404));
+
+		//check if recruiter_id exists if it is set
+		if (req.body.recruiter_id) {
+			const recruiter_id = await checkUserExists(req.body.recruiter_id);
+			if (!recruiter_id) {
+				return next(new AppError("Recruiter user not found", 404));
+			}
 		}
 
 		// check if chosen_gamer_id exists if it is set
