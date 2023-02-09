@@ -102,6 +102,7 @@ exports.createGamer = async (req, res, next) => {
 					}
 					res.status(201).json({
 						status: "success",
+						message: "Gamer created successfully",
 						data: {
 							id: gamer_id
 						}
@@ -120,8 +121,8 @@ exports.getAllGamers = async (req, res, next) => {
 		//query to get all gamers and their favorite games and roles
 		connection.query(
 			`SELECT gamers.*,
-			GROUP_CONCAT(games.game_name SEPARATOR ', ') AS favorite_games,
-			GROUP_CONCAT(roles.role_name SEPARATOR ', ') AS favorite_roles
+			GROUP_CONCAT(DISTINCT games.game_name SEPARATOR ', ') AS favorite_games,
+			GROUP_CONCAT(DISTINCT roles.role_name SEPARATOR ', ') AS favorite_roles
 			FROM gamers
 			LEFT JOIN gamers_games ON gamers.id = gamers_games.gamer_id
 			LEFT JOIN gamers_roles ON gamers.id = gamers_roles.gamer_id
