@@ -46,3 +46,17 @@ exports.getTotalEarned = (req, res, next) => {
 //function for a recruiter to accept an applicant for a job
 
 //function for a recruiter to ask a gamer for a job
+
+//function for a recruiter to get all his jobs
+
+//function for a recruiter to get all his pending applicants for a job
+
+//function for a recruiter to get all his accepted applicants for a job
+
+//function for a recruiter to get all his rejected applicants for a job
+
+//function for a recruiter to get all his pending gamers jobs
+
+//function for a recruiter to get all his accepted gamers jobs
+
+//function for a recruiter to get all his rejected gamers jobs
