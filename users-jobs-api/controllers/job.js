@@ -2,55 +2,6 @@ const AppError = require("../utils/appError");
 const connection = require("../services/db");
 const uuidv4 = require("uuid").v4;
 
-exports.getAllJobs = async (req, res, next) => {
-	try {
-		// get all jobs
-		connection.query(
-			`SELECT jobs.*, GROUP_CONCAT(roles.role_name) as roles, GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers FROM jobs LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id LEFT JOIN roles ON jobs_roles.role_id = roles.id LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id AND gamers_jobs_applicants.application_state = 'Approved' LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' GROUP BY jobs.id`,
-			function (err, data, fields) {
-				if (err) return next(new AppError(err));
-				res.status(200).json({
-					status: "success",
-					length: data?.length,
-					data: data
-				});
-			}
-		);
-	} catch (err) {
-		return next(new AppError(err, 500));
-	}
-};
-
-//function to get specific job using its id
-exports.getJob = async (req, res, next) => {
-	try {
-		if (!req.params.id) {
-			return next(new AppError("No job id found", 404));
-		}
-		const query = `SELECT jobs.*, 
-					GROUP_CONCAT(roles.role_name) as roles, 
-					GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
-					GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
-					FROM jobs LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id 
-					LEFT JOIN roles ON jobs_roles.role_id = roles.id 
-					LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id 
-					AND gamers_jobs_applicants.application_state = 'Approved' 
-					LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id 
-					AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
-					WHERE jobs.id = ? GROUP BY jobs.id`;
-		connection.query(query, [req.params.id], function (err, data, fields) {
-			if (err) return next(new AppError(err, 500));
-			res.status(200).json({
-				status: "success",
-				length: data?.length,
-				data: data
-			});
-		});
-	} catch (err) {
-		return next(new AppError(err, 500));
-	}
-};
-
 //function to create a job, require a job_name and the recruiter_id, others are optional, job_state is set to Available by default
 exports.createJob = async (req, res, next) => {
 	try {
@@ -146,6 +97,67 @@ exports.createJob = async (req, res, next) => {
 						});
 					});
 				}
+			});
+		});
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+};
+
+//function to get all jobs, require no parameters
+exports.getAllJobs = async (req, res, next) => {
+	try {
+		// get all jobs
+		connection.query(
+			`SELECT jobs.*, 
+			GROUP_CONCAT(roles.role_name) as roles, 
+			GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
+			GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
+			FROM jobs 
+			LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id 
+			LEFT JOIN roles ON jobs_roles.role_id = roles.id 
+			LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id 
+			AND gamers_jobs_applicants.application_state = 'Approved' 
+			LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id 
+			AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
+			GROUP BY jobs.id`,
+			function (err, data, fields) {
+				if (err) return next(new AppError(err));
+				res.status(200).json({
+					status: "success",
+					length: data?.length,
+					data: data
+				});
+			}
+		);
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+};
+
+//function to get specific job using its id
+exports.getJob = async (req, res, next) => {
+	try {
+		if (!req.params.id) {
+			return next(new AppError("No job id found", 404));
+		}
+		const query = `SELECT jobs.*, 
+					GROUP_CONCAT(roles.role_name) as roles, 
+					GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
+					GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
+					FROM jobs LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id 
+					LEFT JOIN roles ON jobs_roles.role_id = roles.id 
+					LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id 
+					AND gamers_jobs_applicants.application_state = 'Approved' 
+					LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id 
+					AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
+					WHERE jobs.id = ? GROUP BY jobs.id`;
+		connection.query(query, [req.params.id], function (err, data, fields) {
+			if (err) return next(new AppError(err, 500));
+			res.status(200).json({
+				status: "success",
+				length: data?.length,
+				data: data
 			});
 		});
 	} catch (err) {
