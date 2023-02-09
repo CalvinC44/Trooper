@@ -1,5 +1,7 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
+const checkRoleExists = require("./checkRoleExists");
+const checkGameExists = require("./checkGameExists");
 
 async function checkUsername(req, res, next) {
 	try {
@@ -72,10 +74,50 @@ function checkHoursPerDay(req, res, next) {
 	next();
 }
 
+//function to check if game exist if one or more are set in the body
+async function checkGamesExist(req, res, next) {
+	try {
+		if (req.body.favorite_games_id) {
+			for (let i = 0; i < req.body.favorite_games_id.length; i++) {
+				const existingGame = await checkGameExists(
+					req.body.favorite_games_id[i]
+				);
+				if (!existingGame) {
+					return next(new AppError("Game does not exist", 400));
+				}
+			}
+		}
+		next();
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
+//function to check if role exist if one or more are set in the body
+async function checkRolesExist(req, res, next) {
+	try {
+		if (req.body.favorite_roles_id) {
+			for (let i = 0; i < req.body.favorite_roles_id.length; i++) {
+				const existingRole = await checkRoleExists(
+					req.body.favorite_roles_id[i]
+				);
+				if (!existingRole) {
+					return next(new AppError("Role does not exist", 400));
+				}
+			}
+		}
+		next();
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
 module.exports = {
 	checkUsername,
 	checkProfileType,
 	checkBirthdateFormat,
 	checkMinHourRate,
-	checkHoursPerDay
+	checkHoursPerDay,
+	checkGamesExist,
+	checkRolesExist
 };

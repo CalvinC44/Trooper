@@ -1,6 +1,6 @@
 const connection = require("../services/db");
 
-// function to check if the role exists
+// function to check role if it exists, resolve true if it does, false if it doesn't
 async function checkRoleExists(roleId) {
 	return new Promise((resolve, reject) => {
 		connection.query(

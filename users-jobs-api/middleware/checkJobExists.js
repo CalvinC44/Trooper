@@ -1,7 +1,6 @@
 const connection = require("../services/db");
 
 // function to check if the job exists
-
 async function checkJobExists(jobId) {
 	return new Promise((resolve, reject) => {
 		connection.query(
