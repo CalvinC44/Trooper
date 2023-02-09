@@ -62,8 +62,11 @@ exports.createJob = async (req, res, next) => {
 					});
 				}
 
-				if (req.body.roles) {
-					const roleValues = req.body.roles.map((role_id) => [job_id, role_id]);
+				if (req.body.roles_id) {
+					const roleValues = req.body.roles_id.map((role_id) => [
+						job_id,
+						role_id
+					]);
 					const roleQuery = "INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
 					connection.query(roleQuery, [roleValues], function (err, result) {
 						if (err) {
@@ -230,8 +233,8 @@ exports.updateJob = async (req, res, next) => {
 						});
 					}
 
-					if (req.body.roles) {
-						const roleValues = req.body.roles.map((role_id) => [
+					if (req.body.roles_id) {
+						const roleValues = req.body.roles_id.map((role_id) => [
 							req.params.id,
 							role_id
 						]);
@@ -288,7 +291,7 @@ exports.updateJob = async (req, res, next) => {
 			});
 			//else if no job details, update the roles
 		} else {
-			const roleValues = req.body.roles.map((role_id) => [
+			const roleValues = req.body.roles_id.map((role_id) => [
 				req.params.id,
 				role_id
 			]);

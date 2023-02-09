@@ -55,10 +55,10 @@ exports.createGamer = async (req, res, next) => {
 				}
 
 				//insert favorite games if any
-				if (req.body.favorite_games) {
+				if (req.body.favorite_games_id) {
 					query = "INSERT INTO gamers_games (gamer_id, game_id) VALUES";
 					let values = [];
-					req.body.favorite_games.forEach((game) => {
+					req.body.favorite_games_id.forEach((game) => {
 						query += "(?,?),";
 						values.push(gamer_id);
 						values.push(game);
@@ -75,10 +75,10 @@ exports.createGamer = async (req, res, next) => {
 				}
 
 				//insert favorite roles if any
-				if (req.body.favorite_roles) {
+				if (req.body.favorite_roles_id) {
 					query = "INSERT INTO gamers_roles (gamer_id, role_id) VALUES";
 					let values = [];
-					req.body.favorite_roles.forEach((role) => {
+					req.body.favorite_roles_id.forEach((role) => {
 						query += "(?,?),";
 						values.push(gamer_id);
 						values.push(role);
