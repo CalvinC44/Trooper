@@ -14,15 +14,19 @@ async function checkUsername(req, res, next) {
 			);
 		});
 
-		//check if username already exists if it is not the same as the one in the response of the query
-		if (
+		if (existingUser.length == 0) {
+			next();
+		}
+		//if the username already exists, check if it belongs to the same user that is trying to update its profile (in this case, the username is not duplicated)
+		else if (
+			req.params.id &&
 			existingUser.length > 0 &&
-			existingUser[0].username !== req.user.username
+			existingUser[0].id == req.params.id
 		) {
+			next();
+		} else {
 			return next(new AppError("Username already taken", 400));
 		}
-
-		next();
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
