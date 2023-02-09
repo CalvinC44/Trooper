@@ -1,19 +1,32 @@
 const express = require("express");
 const gamerControllers = require("../controllers/gamer");
 const jobControllers = require("../controllers/job");
-const checkAttributesGamer = require("../middleware/checkAttributesGamer");
+const {
+	checkUsername,
+	checkProfileType,
+	checkBirthdateFormat,
+	checkMinHourRate,
+	checkHoursPerDay
+} = require("../middleware/gamerMiddleware");
 const checkAttributesJob = require("../middleware/checkAttributesJob");
 const router = express.Router();
 
 //routes for gamers
+const gamerMiddleware = [
+	checkUsername,
+	checkProfileType,
+	checkBirthdateFormat,
+	checkMinHourRate,
+	checkHoursPerDay
+];
 router
 	.route("/gamers")
 	.get(gamerControllers.getAllGamers)
-	.post(checkAttributesGamer, gamerControllers.createGamer);
+	.post(gamerMiddleware, gamerControllers.createGamer);
 router
 	.route("/gamers/:id")
 	.get(gamerControllers.getGamer)
-	.put(checkAttributesGamer, gamerControllers.updateGamer)
+	.put(gamerMiddleware, gamerControllers.updateGamer)
 	.delete(gamerControllers.deleteGamer);
 router.route("/gamer/id").get(gamerControllers.getGamerId);
 
