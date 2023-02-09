@@ -13,10 +13,14 @@ exports.createJob = async (req, res, next) => {
 		if (!req.body.recruiter_id)
 			return next(new AppError("No recruiter_id found"));
 
+		//generate a unique id for the job
 		const job_id = uuidv4();
+
+		//initialize query and values, job_name and recruiter_id are required
 		let query = "INSERT INTO jobs (id, job_name, recruiter_id";
 		let values = [job_id, req.body.job_name, req.body.recruiter_id];
 
+		//possibility to set other attributes of the job
 		const columnMap = {
 			short_description: "short_description",
 			description: "description",
@@ -33,6 +37,7 @@ exports.createJob = async (req, res, next) => {
 			}
 		});
 
+		//if chosen_gamer_id is set, job_state is set to In progress
 		if (req.body.chosen_gamer_id) {
 			query += `, job_state`;
 			values.push("In progress");
