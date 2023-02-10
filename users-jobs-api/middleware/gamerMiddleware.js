@@ -119,20 +119,23 @@ async function updateTotalEarned(req, res, next) {
 	}
 	try {
 		connection.query(
-			"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ?",
+			"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ? AND job_state = 'Done'",
 			[req.params.id],
 			function (err, data, fields) {
 				if (err) return next(new AppError(err, 500));
+
+				let totalEarned = data[0].total_earned;
+				//if the gamer has no jobs done, so result is null, set total_earned to 0
+				if (totalEarned == null) {
+					totalEarned = 0;
+				}
+
 				connection.query(
 					"UPDATE gamers SET total_earned = ? WHERE id = ?",
-					[data[0].total_earned, req.params.id],
+					[totalEarned, req.params.id],
 					function (err, data, fields) {
 						if (err) return next(new AppError(err, 500));
-						res.status(200).json({
-							status: "success",
-							length: data?.length,
-							data: data
-						});
+						next();
 					}
 				);
 			}
