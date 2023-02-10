@@ -18,7 +18,7 @@ const gamerMiddlewareCreateOrUpdate = [
 //routes for gamers
 router
 	.route("/gamers")
-	.get(gamerControllers.getAllGamers)
+	.get(gamerMiddleware.updateTotalEarned, gamerControllers.getAllGamers)
 	.post(gamerMiddlewareCreateOrUpdate, gamerControllers.createGamer);
 router
 	.route("/gamers/:id")

@@ -112,6 +112,36 @@ async function checkRolesExist(req, res, next) {
 	}
 }
 
+//function to update total_earned of a gamer, will be used when a job where the gamer is assigned as chosen_gamer is set to done
+async function updateTotalEarned(req, res, next) {
+	if (!req.params.id) {
+		return next(new AppError("No gamer id found", 404));
+	}
+	try {
+		connection.query(
+			"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ?",
+			[req.params.id],
+			function (err, data, fields) {
+				if (err) return next(new AppError(err, 500));
+				connection.query(
+					"UPDATE gamers SET total_earned = ? WHERE id = ?",
+					[data[0].total_earned, req.params.id],
+					function (err, data, fields) {
+						if (err) return next(new AppError(err, 500));
+						res.status(200).json({
+							status: "success",
+							length: data?.length,
+							data: data
+						});
+					}
+				);
+			}
+		);
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
 module.exports = {
 	checkUsername,
 	checkProfileType,
@@ -119,5 +149,6 @@ module.exports = {
 	checkMinHourRate,
 	checkHoursPerDay,
 	checkGamesExist,
-	checkRolesExist
+	checkRolesExist,
+	updateTotalEarned
 };

@@ -116,6 +116,7 @@ exports.createGamer = async (req, res, next) => {
 };
 
 //function to get all gamers
+//TODO: add pagination ? and select only username and id, roles, games
 exports.getAllGamers = async (req, res, next) => {
 	try {
 		//query to get all gamers and their favorite games and roles
@@ -209,8 +210,7 @@ exports.updateGamer = async (req, res, next) => {
 				req.body.link_linkedin ||
 				req.body.link_facebook ||
 				req.body.min_hour_rate ||
-				req.body.hours_per_day ||
-				req.body.total_earned
+				req.body.hours_per_day
 			) {
 				//initiate query and values
 				let query = "UPDATE gamers SET ";
@@ -229,8 +229,7 @@ exports.updateGamer = async (req, res, next) => {
 					link_linkedin: "link_linkedin",
 					link_facebook: "link_facebook",
 					min_hour_rate: "min_hour_rate",
-					hours_per_day: "hours_per_day",
-					total_earned: "total_earned"
+					hours_per_day: "hours_per_day"
 				};
 
 				Object.keys(columnMap).forEach((key) => {
@@ -357,4 +356,45 @@ exports.deleteGamer = async (req, res, next) => {
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
+};
+
+//function to get total_earned of a gamer, if null does the request and save it
+exports.getTotalEarned = (req, res, next) => {
+	if (!req.params.id) {
+		return next(new AppError("No gamer id found", 404));
+	}
+	connection.query(
+		"SELECT total_earned FROM gamers WHERE id = ?",
+		[req.params.id],
+		function (err, data, fields) {
+			if (err) return next(new AppError(err, 500));
+			if (data[0].total_earned === null) {
+				connection.query(
+					"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ?",
+					[req.params.id],
+					function (err, data, fields) {
+						if (err) return next(new AppError(err, 500));
+						connection.query(
+							"UPDATE gamers SET total_earned = ? WHERE id = ?",
+							[data[0].total_earned, req.params.id],
+							function (err, data, fields) {
+								if (err) return next(new AppError(err, 500));
+								res.status(200).json({
+									status: "success",
+									length: data?.length,
+									data: data
+								});
+							}
+						);
+					}
+				);
+			} else {
+				res.status(200).json({
+					status: "success",
+					length: data?.length,
+					data: data
+				});
+			}
+		}
+	);
 };
