@@ -193,43 +193,140 @@ exports.updateGamer = async (req, res, next) => {
 			return next(new AppError("No gamer id or form data found", 404));
 		}
 
-		//initiate query and values
-		let query = "UPDATE gamers SET ";
-		let values = [];
-
-		const columnMap = {
-			username: "username",
-			profile_type: "profile_type",
-			birthdate: "birthdate",
-			description: "description",
-			location: "location",
-			birthdate: "birthdate",
-			description: "description",
-			name_discord: "name_discord",
-			link_twitter: "link_twitter",
-			link_linkedin: "link_linkedin",
-			link_facebook: "link_facebook",
-			min_hour_rate: "min_hour_rate",
-			hours_per_day: "hours_per_day",
-			total_earned: "total_earned"
-		};
-
-		Object.keys(columnMap).forEach((key) => {
-			if (req.body[key]) {
-				query += `${columnMap[key]} = ?, `;
-				values.push(req.body[key]);
+		connection.beginTransaction(function (err) {
+			if (err) {
+				return next(new AppError(err, 500));
 			}
-		});
 
-		query = query.slice(0, -2); // Removing the last comma and space
-		query += " WHERE id = ?";
-		values.push(req.params.id);
+			if (
+				req.body.username ||
+				req.body.profile_type ||
+				req.body.birthdate ||
+				req.body.description ||
+				req.body.location ||
+				req.body.name_discord ||
+				req.body.link_twitter ||
+				req.body.link_linkedin ||
+				req.body.link_facebook ||
+				req.body.min_hour_rate ||
+				req.body.hours_per_day ||
+				req.body.total_earned
+			) {
+				//initiate query and values
+				let query = "UPDATE gamers SET ";
+				let values = [];
 
-		connection.query(query, values, function (err, data, fields) {
-			if (err) return next(new AppError(err, 500));
-			res.status(200).json({
-				status: "success",
-				message: "gamer updated!"
+				const columnMap = {
+					username: "username",
+					profile_type: "profile_type",
+					birthdate: "birthdate",
+					description: "description",
+					location: "location",
+					birthdate: "birthdate",
+					description: "description",
+					name_discord: "name_discord",
+					link_twitter: "link_twitter",
+					link_linkedin: "link_linkedin",
+					link_facebook: "link_facebook",
+					min_hour_rate: "min_hour_rate",
+					hours_per_day: "hours_per_day",
+					total_earned: "total_earned"
+				};
+
+				Object.keys(columnMap).forEach((key) => {
+					if (req.body[key]) {
+						query += `${columnMap[key]} = ?, `;
+						values.push(req.body[key]);
+					}
+				});
+
+				query = query.slice(0, -2); // Removing the last comma and space
+				query += " WHERE id = ?";
+				values.push(req.params.id);
+				// update gamer info
+				connection.query(query, values, function (err, result) {
+					if (err) {
+						return connection.rollback(function () {
+							return next(new AppError(err, 500));
+						});
+					}
+				});
+			}
+
+			if (req.body.favorite_games_id) {
+				// delete existing favorite games for the gamer
+				connection.query(
+					"DELETE FROM gamers_games WHERE gamer_id = ?",
+					[req.params.id],
+					function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+					}
+				);
+
+				// add the new favorite games for the gamer for each game if any
+				if (req.body.favorite_games_id.length > 0) {
+					const gameValues = req.body.favorite_games_id.map((game_id) => [
+						req.params.id,
+						game_id
+					]);
+					const gameQuery =
+						"INSERT INTO gamers_games (gamer_id, game_id) VALUES ?";
+					connection.query(gameQuery, [gameValues], function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+					});
+				}
+			}
+
+			if (req.body.favorite_roles_id) {
+				// delete existing favorite roles for the gamer
+				connection.query(
+					"DELETE FROM gamers_roles WHERE gamer_id = ?",
+					[req.params.id],
+					function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+					}
+				);
+
+				// add the new favorite roles for the gamer if any
+				if (req.body.favorite_roles_id.length > 0) {
+					const roleValues = req.body.favorite_roles_id.map((role_id) => [
+						req.params.id,
+						role_id
+					]);
+					const roleQuery =
+						"INSERT INTO gamers_roles (gamer_id, role_id) VALUES ?";
+					connection.query(roleQuery, [roleValues], function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+					});
+				}
+			}
+
+			connection.commit(function (err) {
+				if (err) {
+					return connection.rollback(function () {
+						return next(new AppError(err, 500));
+					});
+				}
+				res.status(200).json({
+					status: "success",
+					message: "gamer updated!"
+				});
 			});
 		});
 	} catch (err) {
