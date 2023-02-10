@@ -181,49 +181,48 @@ exports.updateJob = async (req, res, next) => {
 		}
 		if (!req.body) return next(new AppError("No form data found", 404));
 
-		//query to update the job details, if there are any
-		if (
-			req.body.job_name ||
-			req.body.short_description ||
-			req.body.description ||
-			req.body.game_id ||
-			req.body.payment_amount ||
-			req.body.duration ||
-			req.body.chosen_gamer_id
-		) {
-			let query = "UPDATE jobs SET ";
-			let values = [];
-
-			const columnMap = {
-				job_name: "job_name",
-				short_description: "short_description",
-				description: "description",
-				game_id: "game_id",
-				payment_amount: "payment_amount",
-				duration: "duration",
-				chosen_gamer_id: "chosen_gamer_id"
-			};
-
-			Object.keys(columnMap).forEach((key) => {
-				if (req.body[key]) {
-					query += `${columnMap[key]} = ?, `;
-					values.push(req.body[key]);
-				}
-			});
-
-			if (req.body.chosen_gamer_id) {
-				query += `job_state = ?, `;
-				values.push("In progress");
+		connection.beginTransaction(function (err) {
+			if (err) {
+				return next(new AppError(err, 500));
 			}
 
-			query = query.slice(0, -2);
-			query += " WHERE id=?";
-			values.push(req.params.id);
+			if (
+				req.body.job_name ||
+				req.body.short_description ||
+				req.body.description ||
+				req.body.game_id ||
+				req.body.payment_amount ||
+				req.body.duration ||
+				req.body.chosen_gamer_id
+			) {
+				let query = "UPDATE jobs SET ";
+				let values = [];
 
-			connection.beginTransaction(function (err) {
-				if (err) {
-					return next(new AppError(err, 500));
+				const columnMap = {
+					job_name: "job_name",
+					short_description: "short_description",
+					description: "description",
+					game_id: "game_id",
+					payment_amount: "payment_amount",
+					duration: "duration",
+					chosen_gamer_id: "chosen_gamer_id"
+				};
+
+				Object.keys(columnMap).forEach((key) => {
+					if (req.body[key]) {
+						query += `${columnMap[key]} = ?, `;
+						values.push(req.body[key]);
+					}
+				});
+
+				if (req.body.chosen_gamer_id) {
+					query += `job_state = ?, `;
+					values.push("In progress");
 				}
+
+				query = query.slice(0, -2);
+				query += " WHERE id=?";
+				values.push(req.params.id);
 
 				//query to update the job details, if there are any
 				connection.query(query, values, function (err, result) {
@@ -232,105 +231,52 @@ exports.updateJob = async (req, res, next) => {
 							return next(new AppError(err, 500));
 						});
 					}
-
-					if (req.body.roles_id) {
-						const roleValues = req.body.roles_id.map((role_id) => [
-							req.params.id,
-							role_id
-						]);
-						const roleQuery =
-							"INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
-
-						//query to delete the roles of the job
-						connection.query(
-							"DELETE FROM jobs_roles WHERE job_id=?",
-							req.params.id,
-							function (err, result) {
-								if (err) {
-									console.log("DELETE roles");
-									return connection.rollback(function () {
-										return next(new AppError(err, 500));
-									});
-								}
-							}
-						);
-
-						//query to update the roles for the job
-						connection.query(roleQuery, [roleValues], function (err, result) {
-							if (err) {
-								return connection.rollback(function () {
-									return next(new AppError(err, 500));
-								});
-							}
-							connection.commit(function (err) {
-								if (err) {
-									return connection.rollback(function () {
-										return next(new AppError(err, 500));
-									});
-								}
-								res.status(200).json({
-									status: "success",
-									message: "Job updated successfully"
-								});
-							});
-						});
-					} else {
-						connection.commit(function (err) {
-							if (err) {
-								return connection.rollback(function () {
-									return next(new AppError(err, 500));
-								});
-							}
-							res.status(200).json({
-								status: "success",
-								message: "Job updated successfully"
-							});
-						});
-					}
 				});
-			});
-			//else if no job details, update the roles
-		} else {
-			const roleValues = req.body.roles_id.map((role_id) => [
-				req.params.id,
-				role_id
-			]);
-			const roleQuery = "INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
+			}
 
-			//query to delete the roles of the job
-			connection.query(
-				"DELETE FROM jobs_roles WHERE job_id=?",
-				req.params.id,
-				function (err, result) {
-					if (err) {
-						console.log("DELETE roles");
-						return connection.rollback(function () {
-							return next(new AppError(err, 500));
-						});
+			if (req.body.roles_id) {
+				//query to delete all the roles of the job
+				connection.query(
+					"DELETE FROM jobs_roles WHERE job_id = ?",
+					[req.params.id],
+					function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
 					}
-				}
-			);
+				);
 
-			//query to update the roles for the job
-			connection.query(roleQuery, [roleValues], function (err, result) {
+				//query to insert the new roles of the job if any
+				if (req.body.roles_id.length > 0) {
+					const roleValues = req.body.roles_id.map((role_id) => [
+						req.params.id,
+						role_id
+					]);
+					const roleQuery = `INSERT INTO jobs_roles (job_id, role_id) VALUES ?`;
+					connection.query(roleQuery, [roleValues], function (err, result) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+					});
+				}
+			}
+
+			connection.commit(function (err) {
 				if (err) {
 					return connection.rollback(function () {
 						return next(new AppError(err, 500));
 					});
 				}
-				connection.commit(function (err) {
-					if (err) {
-						return connection.rollback(function () {
-							return next(new AppError(err, 500));
-						});
-					}
-					res.status(200).json({
-						status: "success",
-						message: "Job updated successfully"
-					});
+				res.status(200).json({
+					status: "success",
+					message: "Job updated successfully"
 				});
 			});
-		}
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
