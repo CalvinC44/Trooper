@@ -398,3 +398,22 @@ exports.getTotalEarned = (req, res, next) => {
 		}
 	);
 };
+
+//function to get all the jobs of a gamer
+exports.getGamerJobs = (req, res, next) => {
+	if (!req.params.id) {
+		return next(new AppError("No gamer id found", 404));
+	}
+	connection.query(
+		"SELECT * FROM jobs WHERE chosen_gamer_id = ?",
+		[req.params.id],
+		function (err, data, fields) {
+			if (err) return next(new AppError(err, 500));
+			res.status(200).json({
+				status: "success",
+				length: data?.length,
+				data: data
+			});
+		}
+	);
+};
