@@ -62,32 +62,58 @@ async function checkJobState(req, res, next) {
 
 //function to check if payment_amount is correct if it is set
 async function checkPaymentAmount(req, res, next) {
-	try {
-		if (req.body.payment_amount) {
-			if (req.body.payment_amount < 0) {
-				return next(new AppError("Payment amount is not correct", 400));
+	if (req.body.payment_amount) {
+		const paymentAmount = req.body.payment_amount;
+		if (paymentAmount < 0) {
+			return next(new AppError("Payment amount must be positive", 400));
+		}
+		if (isNaN(paymentAmount)) {
+			return next(new AppError("Payment amount must be a number", 400));
+		}
+
+		const paymentAmountString = paymentAmount.toString();
+		const decimalIndex = paymentAmountString.indexOf(".");
+		if (decimalIndex == !-1) {
+			const decimalPart = paymentAmountString.substring(decimalIndex + 1);
+			const integerPart = paymentAmountString.substring(0, decimalIndex);
+			if (decimalPart.length > 2) {
+				return next(
+					new AppError("Payment amount must have at most 2 decimal places", 400)
+				);
+			}
+			if (integerPart.length > 10) {
+				return next(
+					new AppError(
+						"Payment amount must have at most 10 digits before the decimal point",
+						400
+					)
+				);
+			}
+		} else {
+			if (paymentAmountString.length > 10) {
+				return next(
+					new AppError(
+						"Payment amount must have at most 10 digits before the decimal point",
+						400
+					)
+				);
 			}
 		}
-		next();
-	} catch (err) {
-		return next(new AppError(err, 500));
 	}
+	next();
 }
 
 //function to check if duration is correct if it is set
 async function checkDuration(req, res, next) {
-	try {
-		if (
-			req.body.duration &&
-			req.body.duration < 0 &&
-			isNaN(req.body.duration)
-		) {
-			return next(new AppError("Duration is not correct", 400));
-		}
-		next();
-	} catch (err) {
-		return next(new AppError(err, 500));
+	if (req.body.duration) {
+		if (req.body.duration < 0)
+			return next(new AppError("Duration must be positive", 400));
+		if (isNaN(req.body.duration))
+			return next(new AppError("Duration must be a number", 400));
+		if (!Number.isInteger(req.body.duration))
+			return next(new AppError("Duration must be an integer", 400));
 	}
+	next();
 }
 
 //function to check if recruiter_id exists if it is set
@@ -137,6 +163,45 @@ async function checkRolesExist(req, res, next) {
 	}
 }
 
+//function to check that chosen_gamer_id is not the same as recruiter_id
+async function checkChosenGamerIsNotRecruiter(req, res, next) {
+	try {
+		if (req.body.chosen_gamer_id && req.body.recruiter_id) {
+			if (req.body.chosen_gamer_id == req.body.recruiter_id) {
+				return next(
+					new AppError("Chosen gamer cannot be the same as recruiter", 400)
+				);
+			}
+		}
+		next();
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
+//function to check if job is done, if it is, then it cannot be modified
+async function checkJobIsDone(req, res, next) {
+	try {
+		const existingJob = await new Promise((resolve, reject) => {
+			connection.query(
+				"SELECT job_state FROM jobs WHERE id = ?",
+				[req.params.id],
+				function (err, data, fields) {
+					if (err) reject(err);
+					resolve(data);
+				}
+			);
+		});
+		console.log(existingJob[0].job_state);
+		if (existingJob[0].job_state == "Done") {
+			return next(new AppError("Job is done, it cannot be modified", 400));
+		}
+		next();
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
 module.exports = {
 	checkJobExists,
 	checkGameJobExists,
@@ -145,5 +210,7 @@ module.exports = {
 	checkDuration,
 	checkRecruiterExists,
 	checkChosenGamerExists,
-	checkRolesExist
+	checkRolesExist,
+	checkChosenGamerIsNotRecruiter,
+	checkJobIsDone
 };

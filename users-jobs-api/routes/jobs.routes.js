@@ -11,18 +11,18 @@ const jobMiddlewareCreate = [
 	jobMiddleware.checkDuration,
 	jobMiddleware.checkRecruiterExists,
 	jobMiddleware.checkChosenGamerExists,
-	jobMiddleware.checkRolesExist
+	jobMiddleware.checkRolesExist,
+	jobMiddleware.checkChosenGamerIsNotRecruiter
 ];
 
 const jobMiddlewareUpdate = [
 	jobMiddleware.checkJobExists,
 	jobMiddleware.checkGameJobExists,
 	jobMiddleware.checkJobState,
-	jobMiddleware.checkPaymentAmount,
 	jobMiddleware.checkDuration,
-	jobMiddleware.checkRecruiterExists,
-	jobMiddleware.checkChosenGamerExists,
-	jobMiddleware.checkRolesExist
+	jobMiddleware.checkRolesExist,
+	jobMiddleware.checkChosenGamerIsNotRecruiter,
+	jobMiddleware.checkJobIsDone
 ];
 
 //routes for jobs
