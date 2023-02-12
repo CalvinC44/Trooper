@@ -19,3 +19,7 @@
 //function for a recruiter to get all his accepted gamers jobs
 
 //function for a recruiter to get all his rejected gamers jobs
+
+//call update
+
+//NE PAS OUBLIER DE CHANGER LES CHOSEN GAMER ET DONC LES STATE JOB QUAND CHOSENGAMER
