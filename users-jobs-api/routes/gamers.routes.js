@@ -25,5 +25,5 @@ router
 	.put(gamerMiddlewareCreateOrUpdate, gamerControllers.updateGamer)
 	.delete(gamerControllers.deleteGamer);
 router.route("/gamer/id").get(gamerControllers.getGamerId);
-
+router.route("/gamers/:id/jobs").get(gamerControllers.getGamerJobs);
 module.exports = router;
