@@ -29,9 +29,9 @@ CREATE TABLE gamers (
 	link_facebook VARCHAR(255),
     
     /** gamers specific columns **/
-	min_hour_rate DECIMAL(7.2),
-    hours_per_day DECIMAL(3,1),
-    total_earned DECIMAL(7,2)
+	min_hour_rate DECIMAL(10.2),
+    hours_per_day INT,
+    total_earned DECIMAL(10,2)
     
     /** guild master specific columns **/
 );
@@ -68,7 +68,7 @@ CREATE TABLE jobs (
     job_state ENUM('Available', 'In progress', 'Done') NOT NULL DEFAULT 'Available',
     
     payment_amount DECIMAL(10,2),
-    duration DECIMAL(3,1),
+    duration INT,
     
     recruiter_id CHAR(36) NOT NULL,
     FOREIGN KEY (recruiter_id) REFERENCES gamers(id),
