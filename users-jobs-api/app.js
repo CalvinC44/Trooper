@@ -10,8 +10,8 @@ const errorHandler = require("./utils/errorHandler"); // import the error handle
 const app = express(); // create an instance of express
 
 app.use(bodyParser.json());
-app.use("/", gamersRoutes);
-app.use("/", jobsRoutes);
+app.use("/api", gamersRoutes);
+app.use("/api", jobsRoutes);
 
 // this middleware is handling all the routes that doesn't match any defined routes
 app.all("*", (req, res, next) => {
