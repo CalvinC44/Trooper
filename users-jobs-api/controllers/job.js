@@ -191,9 +191,7 @@ exports.updateJob = async (req, res, next) => {
 				req.body.short_description ||
 				req.body.description ||
 				req.body.game_id ||
-				req.body.payment_amount ||
-				req.body.duration ||
-				req.body.chosen_gamer_id
+				req.body.duration
 			) {
 				let query = "UPDATE jobs SET ";
 				let values = [];
@@ -203,7 +201,6 @@ exports.updateJob = async (req, res, next) => {
 					short_description: "short_description",
 					description: "description",
 					game_id: "game_id",
-					payment_amount: "payment_amount",
 					duration: "duration",
 					chosen_gamer_id: "chosen_gamer_id"
 				};
@@ -214,11 +211,6 @@ exports.updateJob = async (req, res, next) => {
 						values.push(req.body[key]);
 					}
 				});
-
-				if (req.body.chosen_gamer_id) {
-					query += `job_state = ?, `;
-					values.push("In progress");
-				}
 
 				query = query.slice(0, -2);
 				query += " WHERE id=?";
