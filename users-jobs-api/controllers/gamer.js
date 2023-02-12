@@ -339,20 +339,61 @@ exports.deleteGamer = async (req, res, next) => {
 		if (!req.params.id) {
 			return next(new AppError("No gamer id found", 404));
 		}
-		connection.query(
-			"DELETE FROM gamers WHERE id=?",
-			[req.params.id],
-			function (err, result) {
-				if (err) return next(new AppError(err, 500));
-				if (result.affectedRows === 0) {
-					return next(new AppError("Gamer not found", 404));
-				}
-				res.status(204).json({
-					status: "success",
-					message: "gamer deleted!"
-				});
+		connection.beginTransaction(function (err) {
+			if (err) {
+				return next(new AppError(err, 500));
 			}
-		);
+
+			//first delete the games and roles associated with the gamer
+			connection.query(
+				"DELETE FROM gamers_games WHERE gamer_id=?",
+				[req.params.id],
+				function (err, result) {
+					if (err) {
+						return connection.rollback(function () {
+							return next(new AppError(err, 500));
+						});
+					}
+				}
+			);
+
+			connection.query(
+				"DELETE FROM gamers_roles WHERE gamer_id=?",
+				[req.params.id],
+				function (err, result) {
+					if (err) {
+						return connection.rollback(function () {
+							return next(new AppError(err, 500));
+						});
+					}
+				}
+			);
+
+			//then delete the gamer
+			connection.query(
+				"DELETE FROM gamers WHERE id=?",
+				[req.params.id],
+				function (err, result) {
+					if (err) {
+						return connection.rollback(function () {
+							return next(new AppError(err, 500));
+						});
+					}
+
+					connection.commit(function (err) {
+						if (err) {
+							return connection.rollback(function () {
+								return next(new AppError(err, 500));
+							});
+						}
+						res.status(204).json({
+							status: "success",
+							message: "gamer deleted!"
+						});
+					});
+				}
+			);
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
