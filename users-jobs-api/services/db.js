@@ -1,13 +1,16 @@
 const mysql = require("mysql2");
 require("dotenv").config();
 
+const host = process.env.HOST;
+const user = process.env.USER;
 const password = process.env.PASSWORD;
+const database = process.env.DATABASE;
 
 const connection = mysql.createConnection({
-	host: "trooperdb-test.c9ikqootrb58.eu-west-3.rds.amazonaws.com",
-	user: "admin_trooper",
+	host: host,
+	user: user,
 	password: password,
-	database: "trooperdb"
+	database: database
 });
 
 connection.connect(function (err) {
