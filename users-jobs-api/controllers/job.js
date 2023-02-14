@@ -13,11 +13,11 @@ exports.createJob = async (req, res, next) => {
 		if (!req.body.recruiter_id)
 			return next(new AppError("No recruiter_id found"));
 
-		//generate a unique id for the job
+		//generate a unique job_id for the job
 		const job_id = uuidv4();
 
 		//initialize query and values, job_name and recruiter_id are required
-		let query = "INSERT INTO jobs (id, job_name, recruiter_id";
+		let query = "INSERT INTO jobs (job_id, job_name, recruiter_id";
 		let values = [job_id, req.body.job_name, req.body.recruiter_id];
 
 		//possibility to set other attributes of the job
@@ -122,13 +122,13 @@ exports.getAllJobs = async (req, res, next) => {
 			GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
 			GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
 			FROM jobs 
-			LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id 
+			LEFT JOIN jobs_roles ON jobs.job_id = jobs_roles.job_id 
 			LEFT JOIN roles ON jobs_roles.role_id = roles.id 
-			LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id 
+			LEFT JOIN gamers_jobs_applicants ON jobs.job_id = gamers_jobs_applicants.job_id 
 			AND gamers_jobs_applicants.application_state = 'Approved' 
-			LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id 
+			LEFT JOIN gamers_jobs_asked_gamers ON jobs.job_id = gamers_jobs_asked_gamers.job_id 
 			AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
-			GROUP BY jobs.id`,
+			GROUP BY jobs.job_id`,
 			function (err, data, fields) {
 				if (err) return next(new AppError(err));
 				res.status(200).json({
@@ -143,24 +143,24 @@ exports.getAllJobs = async (req, res, next) => {
 	}
 };
 
-//function to get specific job using its id
+//function to get specific job using its job_id
 exports.getJob = async (req, res, next) => {
 	try {
-		if (!req.params.id) {
-			return next(new AppError("No job id found", 404));
+		if (!req.params.job_id) {
+			return next(new AppError("No job job_id found", 404));
 		}
 		const query = `SELECT jobs.*, 
 					GROUP_CONCAT(roles.role_name) as roles, 
 					GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
 					GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
-					FROM jobs LEFT JOIN jobs_roles ON jobs.id = jobs_roles.job_id 
+					FROM jobs LEFT JOIN jobs_roles ON jobs.job_id = jobs_roles.job_id 
 					LEFT JOIN roles ON jobs_roles.role_id = roles.id 
-					LEFT JOIN gamers_jobs_applicants ON jobs.id = gamers_jobs_applicants.job_id 
+					LEFT JOIN gamers_jobs_applicants ON jobs.job_id = gamers_jobs_applicants.job_id 
 					AND gamers_jobs_applicants.application_state = 'Approved' 
-					LEFT JOIN gamers_jobs_asked_gamers ON jobs.id = gamers_jobs_asked_gamers.job_id 
+					LEFT JOIN gamers_jobs_asked_gamers ON jobs.job_id = gamers_jobs_asked_gamers.job_id 
 					AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
-					WHERE jobs.id = ? GROUP BY jobs.id`;
-		connection.query(query, [req.params.id], function (err, data, fields) {
+					WHERE jobs.job_id = ? GROUP BY jobs.job_id`;
+		connection.query(query, [req.params.job_id], function (err, data, fields) {
 			if (err) return next(new AppError(err, 500));
 			res.status(200).json({
 				status: "success",
@@ -176,8 +176,8 @@ exports.getJob = async (req, res, next) => {
 //function to update a job
 exports.updateJob = async (req, res, next) => {
 	try {
-		if (!req.params.id) {
-			return next(new AppError("No job id found", 404));
+		if (!req.params.job_id) {
+			return next(new AppError("No job job_id found", 404));
 		}
 		if (!req.body) return next(new AppError("No form data found", 404));
 
@@ -213,8 +213,8 @@ exports.updateJob = async (req, res, next) => {
 				});
 
 				query = query.slice(0, -2);
-				query += " WHERE id=?";
-				values.push(req.params.id);
+				query += " WHERE job_id=?";
+				values.push(req.params.job_id);
 
 				//query to update the job details, if there are any
 				connection.query(query, values, function (err, result) {
@@ -230,7 +230,7 @@ exports.updateJob = async (req, res, next) => {
 				//query to delete all the roles of the job
 				connection.query(
 					"DELETE FROM jobs_roles WHERE job_id = ?",
-					[req.params.id],
+					[req.params.job_id],
 					function (err, result) {
 						if (err) {
 							return connection.rollback(function () {
@@ -243,7 +243,7 @@ exports.updateJob = async (req, res, next) => {
 				//query to insert the new roles of the job if any
 				if (req.body.roles_id.length > 0) {
 					const roleValues = req.body.roles_id.map((role_id) => [
-						req.params.id,
+						req.params.job_id,
 						role_id
 					]);
 					const roleQuery = `INSERT INTO jobs_roles (job_id, role_id) VALUES ?`;
@@ -274,15 +274,15 @@ exports.updateJob = async (req, res, next) => {
 	}
 };
 
-//function to delete a job using its id
+//function to delete a job using its job_id
 exports.deleteJob = async (req, res, next) => {
 	try {
-		if (!req.params.id) {
-			return next(new AppError("No job id found", 404));
+		if (!req.params.job_id) {
+			return next(new AppError("No job job_id found", 404));
 		}
 		connection.query(
-			"DELETE FROM jobs WHERE id=?",
-			[req.params.id],
+			"DELETE FROM jobs WHERE job_id=?",
+			[req.params.job_id],
 			function (err, fields) {
 				if (err) return next(new AppError(err, 500));
 				res.status(201).json({

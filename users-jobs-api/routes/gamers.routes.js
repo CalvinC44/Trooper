@@ -19,11 +19,19 @@ router
 	.route("/gamers")
 	.get(gamerControllers.getAllGamers)
 	.post(gamerMiddlewareCreateOrUpdate, gamerControllers.createGamer);
+
 router
-	.route("/gamers/:id")
+	.route("/gamers/:gamer_id")
 	.get(gamerMiddleware.updateTotalEarned, gamerControllers.getGamer)
 	.put(gamerMiddlewareCreateOrUpdate, gamerControllers.updateGamer)
 	.delete(gamerControllers.deleteGamer);
-router.route("/gamer/id").get(gamerControllers.getGamerId);
-router.route("/gamers/:id/jobs").get(gamerControllers.getGamerJobs);
+
+// router.route("/gamer/gamer_id").get(gamerControllers.getGamerId);
+
+router.route("/gamers/:gamer_id/jobs").get(gamerControllers.getGamerJobs);
+
+router
+	.route("/gamers/:gamer_id/createdJobs")
+	.get(gamerControllers.getGamerCreatedJobs);
+
 module.exports = router;

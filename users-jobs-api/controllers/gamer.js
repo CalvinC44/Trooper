@@ -8,11 +8,11 @@ exports.createGamer = async (req, res, next) => {
 		if (!req.body) return next(new AppError("No form data found", 404));
 		if (!req.body.username) return next(new AppError("No username found", 404));
 
-		//generate a unique id for the gamer
+		//generate a unique gamer_id for the gamer
 		const gamer_id = uuidv4();
 
 		//initialize query and values, username is required
-		let query = "INSERT INTO gamers (id, username";
+		let query = "INSERT INTO gamers (gamer_id, username";
 		let values = [gamer_id, req.body.username];
 
 		//possibility to set other attributes of the gamer
@@ -58,10 +58,10 @@ exports.createGamer = async (req, res, next) => {
 				if (req.body.favorite_games_id) {
 					query = "INSERT INTO gamers_games (gamer_id, game_id) VALUES";
 					let values = [];
-					req.body.favorite_games_id.forEach((game) => {
+					req.body.favorite_games_id.forEach((game_id) => {
 						query += "(?,?),";
 						values.push(gamer_id);
-						values.push(game);
+						values.push(game_id);
 					});
 					query = query.slice(0, -1);
 
@@ -78,10 +78,10 @@ exports.createGamer = async (req, res, next) => {
 				if (req.body.favorite_roles_id) {
 					query = "INSERT INTO gamers_roles (gamer_id, role_id) VALUES";
 					let values = [];
-					req.body.favorite_roles_id.forEach((role) => {
+					req.body.favorite_roles_id.forEach((role_id) => {
 						query += "(?,?),";
 						values.push(gamer_id);
-						values.push(role);
+						values.push(role_id);
 					});
 					query = query.slice(0, -1);
 
@@ -104,7 +104,7 @@ exports.createGamer = async (req, res, next) => {
 						status: "success",
 						message: "Gamer created successfully",
 						data: {
-							id: gamer_id
+							gamer_id: gamer_id
 						}
 					});
 				});
@@ -116,7 +116,7 @@ exports.createGamer = async (req, res, next) => {
 };
 
 //function to get all gamers
-//TODO: add pagination ? and select only username and id, roles, games
+//TODO: add pagination ? and select only username and gamer_id, roles, games
 exports.getAllGamers = async (req, res, next) => {
 	try {
 		//query to get all gamers and their favorite games and roles
@@ -125,11 +125,11 @@ exports.getAllGamers = async (req, res, next) => {
 			GROUP_CONCAT(DISTINCT games.game_name SEPARATOR ', ') AS favorite_games,
 			GROUP_CONCAT(DISTINCT roles.role_name SEPARATOR ', ') AS favorite_roles
 			FROM gamers
-			LEFT JOIN gamers_games ON gamers.id = gamers_games.gamer_id
-			LEFT JOIN gamers_roles ON gamers.id = gamers_roles.gamer_id
+			LEFT JOIN gamers_games ON gamers.gamer_id = gamers_games.gamer_id
+			LEFT JOIN gamers_roles ON gamers.gamer_id = gamers_roles.gamer_id
 			LEFT JOIN games ON gamers_games.game_id = games.id
 			LEFT JOIN roles ON gamers_roles.role_id = roles.id
-			GROUP BY gamers.id`,
+			GROUP BY gamers.gamer_id`,
 			function (err, data, fields) {
 				if (err) return next(new AppError(err));
 				res.status(200).json({
@@ -144,13 +144,13 @@ exports.getAllGamers = async (req, res, next) => {
 	}
 };
 
-//function to get a gamer's id using its username
+//function to get a gamer's gamer_id using its username
 exports.getGamerId = async (req, res, next) => {
 	try {
 		if (!req.body.username)
 			return next(new AppError("No gamer username found", 404));
 		connection.query(
-			"SELECT id FROM gamers WHERE username = ?",
+			"SELECT gamer_id FROM gamers WHERE username = ?",
 			[req.body.username],
 			function (err, data, fields) {
 				if (err) return next(new AppError(err, 500));
@@ -166,13 +166,14 @@ exports.getGamerId = async (req, res, next) => {
 	}
 };
 
-//function to get a gamer using its id
+//function to get a gamer using its gamer_id
 exports.getGamer = async (req, res, next) => {
 	try {
-		if (!req.params.id) return next(new AppError("No gamer id found", 404));
+		if (!req.params.gamer_id)
+			return next(new AppError("No gamer gamer_id found", 404));
 		connection.query(
-			"SELECT * FROM gamers WHERE id = ?",
-			[req.params.id],
+			"SELECT * FROM gamers WHERE gamer_id = ?",
+			[req.params.gamer_id],
 			function (err, data, fields) {
 				if (err) return next(new AppError(err, 500));
 				res.status(200).json({
@@ -190,8 +191,12 @@ exports.getGamer = async (req, res, next) => {
 //function to update a gamer
 exports.updateGamer = async (req, res, next) => {
 	try {
-		if (!req.params.id || !req.body || Object.keys(req.body).length === 0) {
-			return next(new AppError("No gamer id or form data found", 404));
+		if (
+			!req.params.gamer_id ||
+			!req.body ||
+			Object.keys(req.body).length === 0
+		) {
+			return next(new AppError("No gamer gamer_id or form data found", 404));
 		}
 
 		connection.beginTransaction(function (err) {
@@ -240,8 +245,8 @@ exports.updateGamer = async (req, res, next) => {
 				});
 
 				query = query.slice(0, -2); // Removing the last comma and space
-				query += " WHERE id = ?";
-				values.push(req.params.id);
+				query += " WHERE gamer_id = ?";
+				values.push(req.params.gamer_id);
 				// update gamer info
 				connection.query(query, values, function (err, result) {
 					if (err) {
@@ -256,7 +261,7 @@ exports.updateGamer = async (req, res, next) => {
 				// delete existing favorite games for the gamer
 				connection.query(
 					"DELETE FROM gamers_games WHERE gamer_id = ?",
-					[req.params.id],
+					[req.params.gamer_id],
 					function (err, result) {
 						if (err) {
 							return connection.rollback(function () {
@@ -269,7 +274,7 @@ exports.updateGamer = async (req, res, next) => {
 				// add the new favorite games for the gamer for each game if any
 				if (req.body.favorite_games_id.length > 0) {
 					const gameValues = req.body.favorite_games_id.map((game_id) => [
-						req.params.id,
+						req.params.gamer_id,
 						game_id
 					]);
 					const gameQuery =
@@ -288,7 +293,7 @@ exports.updateGamer = async (req, res, next) => {
 				// delete existing favorite roles for the gamer
 				connection.query(
 					"DELETE FROM gamers_roles WHERE gamer_id = ?",
-					[req.params.id],
+					[req.params.gamer_id],
 					function (err, result) {
 						if (err) {
 							return connection.rollback(function () {
@@ -301,7 +306,7 @@ exports.updateGamer = async (req, res, next) => {
 				// add the new favorite roles for the gamer if any
 				if (req.body.favorite_roles_id.length > 0) {
 					const roleValues = req.body.favorite_roles_id.map((role_id) => [
-						req.params.id,
+						req.params.gamer_id,
 						role_id
 					]);
 					const roleQuery =
@@ -333,11 +338,11 @@ exports.updateGamer = async (req, res, next) => {
 	}
 };
 
-//function to delete a gamer using its id
+//function to delete a gamer using its gamer_id
 exports.deleteGamer = async (req, res, next) => {
 	try {
-		if (!req.params.id) {
-			return next(new AppError("No gamer id found", 404));
+		if (!req.params.gamer_id) {
+			return next(new AppError("No gamer gamer_id found", 404));
 		}
 		connection.beginTransaction(function (err) {
 			if (err) {
@@ -347,7 +352,7 @@ exports.deleteGamer = async (req, res, next) => {
 			//first delete the games and roles associated with the gamer
 			connection.query(
 				"DELETE FROM gamers_games WHERE gamer_id=?",
-				[req.params.id],
+				[req.params.gamer_id],
 				function (err, result) {
 					if (err) {
 						return connection.rollback(function () {
@@ -359,7 +364,7 @@ exports.deleteGamer = async (req, res, next) => {
 
 			connection.query(
 				"DELETE FROM gamers_roles WHERE gamer_id=?",
-				[req.params.id],
+				[req.params.gamer_id],
 				function (err, result) {
 					if (err) {
 						return connection.rollback(function () {
@@ -371,8 +376,8 @@ exports.deleteGamer = async (req, res, next) => {
 
 			//then delete the gamer
 			connection.query(
-				"DELETE FROM gamers WHERE id=?",
-				[req.params.id],
+				"DELETE FROM gamers WHERE gamer_id=?",
+				[req.params.gamer_id],
 				function (err, result) {
 					if (err) {
 						return connection.rollback(function () {
@@ -401,23 +406,23 @@ exports.deleteGamer = async (req, res, next) => {
 
 //function to get total_earned of a gamer, if null does the request and save it
 exports.getTotalEarned = (req, res, next) => {
-	if (!req.params.id) {
-		return next(new AppError("No gamer id found", 404));
+	if (!req.params.gamer_id) {
+		return next(new AppError("No gamer gamer_id found", 404));
 	}
 	connection.query(
-		"SELECT total_earned FROM gamers WHERE id = ?",
-		[req.params.id],
+		"SELECT total_earned FROM gamers WHERE gamer_id = ?",
+		[req.params.gamer_id],
 		function (err, data, fields) {
 			if (err) return next(new AppError(err, 500));
 			if (data[0].total_earned === null) {
 				connection.query(
 					"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ?",
-					[req.params.id],
+					[req.params.gamer_id],
 					function (err, data, fields) {
 						if (err) return next(new AppError(err, 500));
 						connection.query(
-							"UPDATE gamers SET total_earned = ? WHERE id = ?",
-							[data[0].total_earned, req.params.id],
+							"UPDATE gamers SET total_earned = ? WHERE gamer_id = ?",
+							[data[0].total_earned, req.params.gamer_id],
 							function (err, data, fields) {
 								if (err) return next(new AppError(err, 500));
 								res.status(200).json({
@@ -442,12 +447,31 @@ exports.getTotalEarned = (req, res, next) => {
 
 //function to get all the jobs of a gamer
 exports.getGamerJobs = (req, res, next) => {
-	if (!req.params.id) {
-		return next(new AppError("No gamer id found", 404));
+	if (!req.params.gamer_id) {
+		return next(new AppError("No gamer gamer_id found", 404));
 	}
 	connection.query(
 		"SELECT * FROM jobs WHERE chosen_gamer_id = ?",
-		[req.params.id],
+		[req.params.gamer_id],
+		function (err, data, fields) {
+			if (err) return next(new AppError(err, 500));
+			res.status(200).json({
+				status: "success",
+				length: data?.length,
+				data: data
+			});
+		}
+	);
+};
+
+//function to get all the jobs created by a gamer
+exports.getGamerCreatedJobs = (req, res, next) => {
+	if (!req.params.gamer_id) {
+		return next(new AppError("No gamer gamer_id found", 404));
+	}
+	connection.query(
+		"SELECT * FROM jobs WHERE recruited_id = ?",
+		[req.params.gamer_id],
 		function (err, data, fields) {
 			if (err) return next(new AppError(err, 500));
 			res.status(200).json({

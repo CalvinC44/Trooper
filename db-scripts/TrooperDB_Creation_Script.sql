@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS gamers;
 **/
 
 CREATE TABLE gamers (
-    id CHAR(36) PRIMARY KEY NOT NULL,
+    gamer_id CHAR(36) PRIMARY KEY NOT NULL,
     username VARCHAR(255) NOT NULL UNIQUE,
 	date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     profile_type ENUM('Gamer', 'Recruiter', 'Guild Manager') DEFAULT 'Gamer' NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE games (
 INSERT INTO games (game_name) VALUES ("GTA V"), ("FIFA"), ("LOL"), ("WOW"), ("Hearthstone"), ("COD");
 
 CREATE TABLE jobs (
-    id CHAR(36) PRIMARY KEY NOT NULL,
+    job_id CHAR(36) PRIMARY KEY NOT NULL,
     job_name VARCHAR(255) NOT NULL,
     date_created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
@@ -73,10 +73,10 @@ CREATE TABLE jobs (
     duration INT,
     
     recruiter_id CHAR(36) NOT NULL,
-    FOREIGN KEY (recruiter_id) REFERENCES gamers(id),
+    FOREIGN KEY (recruiter_id) REFERENCES gamers(gamer_id),
     
     chosen_gamer_id CHAR(36),
-    FOREIGN KEY (chosen_gamer_id) REFERENCES gamers(id)
+    FOREIGN KEY (chosen_gamer_id) REFERENCES gamers(gamer_id)
 );
 
 
@@ -85,7 +85,7 @@ CREATE TABLE gamers_games (
 	gamer_id CHAR(36) NOT NULL,
     game_id INT NOT NULL,
     PRIMARY KEY (gamer_id, game_id),
-    FOREIGN KEY (gamer_id) REFERENCES gamers(id),
+    FOREIGN KEY (gamer_id) REFERENCES gamers(gamer_id),
     FOREIGN KEY (game_id) REFERENCES games(id)
 );
 
@@ -93,7 +93,7 @@ CREATE TABLE gamers_roles (
 	gamer_id CHAR(36) NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (gamer_id, role_id),
-    FOREIGN KEY (gamer_id) REFERENCES gamers(id),
+    FOREIGN KEY (gamer_id) REFERENCES gamers(gamer_id),
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
@@ -101,7 +101,7 @@ CREATE TABLE jobs_roles (
     job_id CHAR(36) NOT NULL,
     role_id INT NOT NULL,
     PRIMARY KEY (job_id, role_id),
-    FOREIGN KEY (job_id) REFERENCES jobs(id),
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id),
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
@@ -110,8 +110,8 @@ CREATE TABLE gamers_jobs_applicants (
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
     application_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
-    FOREIGN KEY (gamer_id) REFERENCES gamers(id),
-    FOREIGN KEY (job_id) REFERENCES jobs(id)
+    FOREIGN KEY (gamer_id) REFERENCES gamers(gamer_id),
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );
 
 CREATE TABLE gamers_jobs_asked_gamers (
@@ -119,6 +119,6 @@ CREATE TABLE gamers_jobs_asked_gamers (
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
     recruitment_state ENUM ('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
-    FOREIGN KEY (gamer_id) REFERENCES gamers(id),
-    FOREIGN KEY (job_id) REFERENCES jobs(id)
+    FOREIGN KEY (gamer_id) REFERENCES gamers(gamer_id),
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );

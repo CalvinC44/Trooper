@@ -31,7 +31,7 @@ router
 	.get(jobControllers.getAllJobs)
 	.post(jobMiddlewareCreate, jobControllers.createJob);
 router
-	.route("/jobs/:id")
+	.route("/jobs/:job_id")
 	.get(jobControllers.getJob)
 	.put(jobMiddlewareUpdate, jobControllers.updateJob)
 	.delete(jobControllers.deleteJob);
