@@ -1,7 +1,8 @@
-DROP DATABASE trooperdb;
+DROP DATABASE IF EXISTS trooperdb;
 CREATE DATABASE IF NOT EXISTS trooperdb;
 USE trooperdb;
 
+/**
 DROP TABLE IF EXISTS gamers_jobs_applicants;
 DROP TABLE IF EXISTS gamers_jobs_asked_gamers;
 DROP TABLE IF EXISTS gamers_games;
@@ -12,6 +13,7 @@ DROP TABLE IF EXISTS jobs;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS guilds;
 DROP TABLE IF EXISTS gamers; 
+**/
 
 CREATE TABLE gamers (
     id CHAR(36) PRIMARY KEY NOT NULL,
@@ -120,17 +122,3 @@ CREATE TABLE gamers_jobs_asked_gamers (
     FOREIGN KEY (gamer_id) REFERENCES gamers(id),
     FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
-
-/** DELIMITER //
-CREATE TRIGGER update_chosen_gamer
-AFTER UPDATE ON gamers_jobs
-FOR EACH ROW
-BEGIN
-   IF NEW.application_state = 'Approved' THEN
-       UPDATE jobs
-       SET chosen_gamer_id = NEW.gamer_id
-       WHERE id = NEW.job_id;
-   END IF;
-END;
-//
-DELIMITER ; **/
