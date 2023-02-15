@@ -66,6 +66,10 @@ List of routes and descriptions :
 
 5. /api/gamers/:id/jobs
 
+   - GET : Get all jobs of a gamer
+
+6. /api/gamers/:id/createdJobs
+
    - GET : Get all jobs created by a gamer
 
 /------------------------------------/
@@ -84,23 +88,19 @@ List of routes and descriptions :
 
 9. /api/gamers/:id/applications/:jobId
 
-   - PUT : Update an application
+   - GET : Get an application
 
-10. /api/gamers/:id/applications/:jobId
-
-    - GET : Get an application
-
-11. /api/gamers/:id/applications/:jobId/accept
+10. /api/gamers/:id/applications/:jobId/accept
 
     - PUT : Accept an application
 
-12. /api/gamers/:id/applications/:jobId/reject
+11. /api/gamers/:id/applications/:jobId/reject
 
     - PUT : Reject an application
 
-13. /api/gamers/:id/applications/:jobId/withdraw
+12. /api/gamers/:id/applications/:jobId/withdraw
 
     - PUT : Withdraw an application
 
-14. /api/gamers/:id/applications/:jobId/complete
+13. /api/gamers/:id/applications/:jobId/complete
     - PUT : Complete an application
