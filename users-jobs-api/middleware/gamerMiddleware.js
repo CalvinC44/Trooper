@@ -21,9 +21,9 @@ async function checkUsername(req, res, next) {
 		}
 		//if the username already exists, check if it belongs to the same user that is trying to update its profile (in this case, the username is not duplicated)
 		else if (
-			req.params.id &&
+			req.params.gamer_id &&
 			existingUser.length > 0 &&
-			existingUser[0].id == req.params.id
+			existingUser[0].gamer_id == req.params.gamer_id
 		) {
 			next();
 		} else {
@@ -114,13 +114,13 @@ async function checkRolesExist(req, res, next) {
 
 //function to update total_earned of a gamer, will be used when a job where the gamer is assigned as chosen_gamer is set to done
 async function updateTotalEarned(req, res, next) {
-	if (!req.params.id) {
-		return next(new AppError("No gamer id found", 404));
+	if (!req.params.gamer_id) {
+		return next(new AppError("No gamer gamer_id found", 404));
 	}
 	try {
 		connection.query(
 			"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ? AND job_state = 'Done'",
-			[req.params.id],
+			[req.params.gamer_id],
 			function (err, data, fields) {
 				if (err) return next(new AppError(err, 500));
 
@@ -131,8 +131,8 @@ async function updateTotalEarned(req, res, next) {
 				}
 
 				connection.query(
-					"UPDATE gamers SET total_earned = ? WHERE id = ?",
-					[totalEarned, req.params.id],
+					"UPDATE gamers SET total_earned = ? WHERE gamer_id = ?",
+					[totalEarned, req.params.gamer_id],
 					function (err, data, fields) {
 						if (err) return next(new AppError(err, 500));
 						next();

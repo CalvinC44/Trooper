@@ -9,8 +9,8 @@ async function checkJobExists(req, res, next) {
 	try {
 		const existingJob = await new Promise((resolve, reject) => {
 			connection.query(
-				"SELECT 1 FROM jobs WHERE id = ?",
-				[req.params.id],
+				"SELECT 1 FROM jobs WHERE job_id = ?",
+				[req.params.job_id],
 				function (err, data, fields) {
 					if (err) return reject(err);
 					resolve(data);
@@ -184,8 +184,8 @@ async function checkJobIsDone(req, res, next) {
 	try {
 		const existingJob = await new Promise((resolve, reject) => {
 			connection.query(
-				"SELECT job_state FROM jobs WHERE id = ?",
-				[req.params.id],
+				"SELECT job_state FROM jobs WHERE job_id = ?",
+				[req.params.job_id],
 				function (err, data, fields) {
 					if (err) reject(err);
 					resolve(data);
