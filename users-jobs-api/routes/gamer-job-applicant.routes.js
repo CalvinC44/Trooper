@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const {
 	getGamerJobsApplications,
 	getJobApplications,
@@ -7,10 +8,8 @@ const {
 	rejectApplication,
 	deleteApplication
 } = require("../controllers/gamer-job-applicant.js");
-const router = express.Router();
 
-//middleware for gamers creation and update
-// const gamerMiddlewareCreateOrUpdate = [];
+//middleware import
 
 //routes for gamers applications
 router.route("/applications/gamer/:gamer_id").get(getGamerJobsApplications);
