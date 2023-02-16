@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS trooperdb;
 USE trooperdb;
 
 /**
-DROP TABLE IF EXISTS gamers_jobs_applicants;
+DROP TABLE IF EXISTS gamers_jobs_applications;
 DROP TABLE IF EXISTS gamers_jobs_asked;
 DROP TABLE IF EXISTS gamers_games;
 DROP TABLE IF EXISTS gamers_roles;
@@ -105,7 +105,7 @@ CREATE TABLE jobs_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE gamers_jobs_applicants (
+CREATE TABLE gamers_jobs_applications (
     gamer_id CHAR(36) NOT NULL,
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
