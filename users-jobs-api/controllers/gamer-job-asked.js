@@ -1,12 +1,12 @@
 const AppError = require("../utils/appError");
 const connection = require("../services/db");
 
-//function to get all the gamers that have been asked for a job, get their gamer_id, gamer_name and application_state
+//function to get all the gamers that have been asked for a job, get their gamer_id, gamer_name and recruitment_state
 exports.getJobAskedGamers = async (req, res, next) => {
 	try {
 		const { job_id } = req.params;
 
-		const query = `SELECT gamer_name, gamer_id, application_state FROM gamers_jobs_asked INNER JOIN gamers ON gamers_jobs_asked.gamer_id = gamers.gamer_id WHERE job_id = ?`;
+		const query = `SELECT gamer_name, gamer_id, recruitment_state FROM gamers_jobs_asked INNER JOIN gamers ON gamers_jobs_asked.gamer_id = gamers.gamer_id WHERE job_id = ?`;
 		const values = [job_id];
 
 		connection.query(query, values, function (err, result) {
@@ -67,12 +67,12 @@ exports.deleteJobAsked = async (req, res, next) => {
 	}
 };
 
-//DONE function to get all the jobs that a gamer has been asked for, get their job_id, job_name and application_state
+//DONE function to get all the jobs that a gamer has been asked for, get their job_id, job_name and recruitment_state
 exports.getGamerJobsAsked = async (req, res, next) => {
 	try {
 		const { gamer_id } = req.params;
 
-		const query = `SELECT job_name, job_id, application_state FROM gamers_jobs_asked INNER JOIN jobs ON gamers_jobs_asked.job_id = jobs.job_id WHERE gamer_id = ?`;
+		const query = `SELECT job_name, job_id, recruitment_state FROM gamers_jobs_asked INNER JOIN jobs ON gamers_jobs_asked.job_id = jobs.job_id WHERE gamer_id = ?`;
 		const values = [gamer_id];
 
 		connection.query(query, values, function (err, result) {
@@ -101,8 +101,8 @@ exports.approveJobAsked = async (req, res, next) => {
 				});
 			}
 
-			//update the application_state of the application
-			const query = `UPDATE gamers_jobs_asked SET application_state = 'Approved' WHERE gamer_id = ? AND job_id = ?`;
+			//update the recruitment_state of the application
+			const query = `UPDATE gamers_jobs_asked SET recruitment_state = 'Approved' WHERE gamer_id = ? AND job_id = ?`;
 			const values = [gamer_id, job_id];
 
 			connection.query(query, values, function (err, result) {
@@ -147,8 +147,8 @@ exports.rejectJobAsked = async (req, res, next) => {
 	try {
 		const { gamer_id, job_id } = req.params;
 
-		//update the application_state of the application
-		const query = `UPDATE gamers_jobs_asked SET application_state = 'Rejected' WHERE gamer_id = ? AND job_id = ?`;
+		//update the recruitment_state of the application
+		const query = `UPDATE gamers_jobs_asked SET recruitment_state = 'Rejected' WHERE gamer_id = ? AND job_id = ?`;
 		const values = [gamer_id, job_id];
 
 		connection.query(query, values, function (err, result) {
