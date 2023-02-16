@@ -192,7 +192,6 @@ async function checkJobIsDone(req, res, next) {
 				}
 			);
 		});
-		console.log(existingJob[0].job_state);
 		if (existingJob[0].job_state == "Done") {
 			return next(new AppError("Job is done, it cannot be modified", 400));
 		}

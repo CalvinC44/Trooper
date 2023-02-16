@@ -10,9 +10,7 @@ const jobMiddlewareCreate = [
 	jobMiddleware.checkPaymentAmount,
 	jobMiddleware.checkDuration,
 	jobMiddleware.checkRecruiterExists,
-	jobMiddleware.checkChosenGamerExists,
-	jobMiddleware.checkRolesExist,
-	jobMiddleware.checkChosenGamerIsNotRecruiter
+	jobMiddleware.checkRolesExist
 ];
 
 const jobMiddlewareUpdate = [
@@ -21,7 +19,6 @@ const jobMiddlewareUpdate = [
 	jobMiddleware.checkJobState,
 	jobMiddleware.checkDuration,
 	jobMiddleware.checkRolesExist,
-	jobMiddleware.checkChosenGamerIsNotRecruiter,
 	jobMiddleware.checkJobIsDone
 ];
 

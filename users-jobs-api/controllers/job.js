@@ -26,8 +26,7 @@ exports.createJob = async (req, res, next) => {
 			description: "description",
 			game_id: "game_id",
 			payment_amount: "payment_amount",
-			duration: "duration",
-			chosen_gamer_id: "chosen_gamer_id"
+			duration: "duration"
 		};
 
 		Object.keys(columnMap).forEach((key) => {
@@ -36,12 +35,6 @@ exports.createJob = async (req, res, next) => {
 				values.push(req.body[key]);
 			}
 		});
-
-		//if chosen_gamer_id is set, job_state is set to In progress
-		if (req.body.chosen_gamer_id) {
-			query += `, job_state`;
-			values.push("In progress");
-		}
 
 		query += ") VALUES(?";
 		for (let i = 1; i < values.length; i++) {
@@ -201,8 +194,7 @@ exports.updateJob = async (req, res, next) => {
 					short_description: "short_description",
 					description: "description",
 					game_id: "game_id",
-					duration: "duration",
-					chosen_gamer_id: "chosen_gamer_id"
+					duration: "duration"
 				};
 
 				Object.keys(columnMap).forEach((key) => {
