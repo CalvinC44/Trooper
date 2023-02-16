@@ -120,14 +120,14 @@ exports.getAllJobs = async (req, res, next) => {
 			`SELECT jobs.*, 
 			GROUP_CONCAT(roles.role_name) as roles, 
 			GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
-			GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
+			GROUP_CONCAT(gamers_jobs_asked.gamer_id) as asked_gamers 
 			FROM jobs 
 			LEFT JOIN jobs_roles ON jobs.job_id = jobs_roles.job_id 
 			LEFT JOIN roles ON jobs_roles.role_id = roles.id 
 			LEFT JOIN gamers_jobs_applicants ON jobs.job_id = gamers_jobs_applicants.job_id 
 			AND gamers_jobs_applicants.application_state = 'Approved' 
-			LEFT JOIN gamers_jobs_asked_gamers ON jobs.job_id = gamers_jobs_asked_gamers.job_id 
-			AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
+			LEFT JOIN gamers_jobs_asked ON jobs.job_id = gamers_jobs_asked.job_id 
+			AND gamers_jobs_asked.recruitment_state = 'Approved' 
 			GROUP BY jobs.job_id`,
 			function (err, data, fields) {
 				if (err) return next(new AppError(err));
@@ -152,13 +152,13 @@ exports.getJob = async (req, res, next) => {
 		const query = `SELECT jobs.*, 
 					GROUP_CONCAT(roles.role_name) as roles, 
 					GROUP_CONCAT(gamers_jobs_applicants.gamer_id) as applicants, 
-					GROUP_CONCAT(gamers_jobs_asked_gamers.gamer_id) as asked_gamers 
+					GROUP_CONCAT(gamers_jobs_asked.gamer_id) as asked_gamers 
 					FROM jobs LEFT JOIN jobs_roles ON jobs.job_id = jobs_roles.job_id 
 					LEFT JOIN roles ON jobs_roles.role_id = roles.id 
 					LEFT JOIN gamers_jobs_applicants ON jobs.job_id = gamers_jobs_applicants.job_id 
 					AND gamers_jobs_applicants.application_state = 'Approved' 
-					LEFT JOIN gamers_jobs_asked_gamers ON jobs.job_id = gamers_jobs_asked_gamers.job_id 
-					AND gamers_jobs_asked_gamers.recruitment_state = 'Approved' 
+					LEFT JOIN gamers_jobs_asked ON jobs.job_id = gamers_jobs_asked.job_id 
+					AND gamers_jobs_asked.recruitment_state = 'Approved' 
 					WHERE jobs.job_id = ? GROUP BY jobs.job_id`;
 		connection.query(query, [req.params.job_id], function (err, data, fields) {
 			if (err) return next(new AppError(err, 500));

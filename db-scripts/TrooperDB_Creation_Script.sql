@@ -4,7 +4,7 @@ USE trooperdb;
 
 /**
 DROP TABLE IF EXISTS gamers_jobs_applicants;
-DROP TABLE IF EXISTS gamers_jobs_asked_gamers;
+DROP TABLE IF EXISTS gamers_jobs_asked;
 DROP TABLE IF EXISTS gamers_games;
 DROP TABLE IF EXISTS gamers_roles;
 DROP TABLE IF EXISTS jobs_roles;
@@ -114,7 +114,7 @@ CREATE TABLE gamers_jobs_applicants (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );
 
-CREATE TABLE gamers_jobs_asked_gamers (
+CREATE TABLE gamers_jobs_asked (
     gamer_id CHAR(36) NOT NULL,
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
