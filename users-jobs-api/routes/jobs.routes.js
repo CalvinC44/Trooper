@@ -32,5 +32,7 @@ router
 	.get(jobControllers.getJob)
 	.put(jobMiddlewareUpdate, jobControllers.updateJob)
 	.delete(jobControllers.deleteJob);
-
+router
+	.route("/jobs/:job_id/chosen_gamer/:gamer_id")
+	.put(jobControllers.deleteChosenGamer);
 module.exports = router;

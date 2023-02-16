@@ -287,3 +287,88 @@ exports.deleteJob = async (req, res, next) => {
 		return next(new AppError(err, 500));
 	}
 };
+
+//function to delete the chosen_gamer_id from the job
+exports.deleteChosenGamer = async (req, res, next) => {
+	try {
+		if (!req.params.job_id) {
+			return next(new AppError("No job job_id found", 404));
+		}
+
+		connection.beginTransaction(function (err) {
+			if (err) {
+				return next(new AppError(err, 500));
+			}
+
+			//query to delete the chosen_gamer_id from the job
+			connection.query(
+				"UPDATE jobs SET chosen_gamer_id = NULL WHERE job_id=?",
+				[req.params.job_id],
+				function (err, fields) {
+					if (err) return next(new AppError(err, 500));
+					res.status(201).json({
+						status: "success",
+						message: "Chosen gamer deleted!"
+					});
+				}
+			);
+
+			//query to update the job_state of the job to 'Available'
+			connection.query(
+				"UPDATE jobs SET job_state = 'Available' WHERE job_id=?",
+				[req.params.job_id],
+				function (err, fields) {
+					if (err) return next(new AppError(err, 500));
+				}
+			);
+
+			//check if there is an application from the chosen gamer
+			connection.query(
+				"SELECT * FROM gamers_jobs_applications WHERE job_id=? AND chosen_gamer_id=?",
+				[req.params.job_id, req.body.chosen_gamer_id],
+				function (err, fields) {
+					if (err) return next(new AppError(err, 500));
+					if (fields.length > 0) {
+						//update the application state of the chosen gamer to 'Rejected' if there is an application from the chosen gamer
+						connection.query(
+							"UPDATE gamers_jobs_applications SET application_state = 'Rejected' WHERE job_id=? AND chosen_gamer_id=?",
+							[req.params.job_id, req.body.chosen_gamer_id],
+							function (err, fields) {
+								if (err) return next(new AppError(err, 500));
+							}
+						);
+					}
+				}
+			);
+
+			//check if there is a job asked to the chosen gamer
+			connection.query(
+				"SELECT * FROM gamers_jobs_asked WHERE job_id=? AND chosen_gamer_id=?",
+				[req.params.job_id, req.body.chosen_gamer_id],
+				function (err, fields) {
+					if (err) return next(new AppError(err, 500));
+					if (fields.length > 0) {
+						//update the asked state of the chosen gamer to 'Rejected' if there is a job asked to the chosen gamer
+						connection.query(
+							"UPDATE gamers_jobs_asked SET recruitment_state = 'Rejected' WHERE job_id=? AND chosen_gamer_id=?",
+							[req.params.job_id, req.body.chosen_gamer_id],
+							function (err, fields) {
+								if (err) return next(new AppError(err, 500));
+							}
+						);
+					}
+				}
+			);
+
+			connection.commit(function (err) {
+				if (err) {
+					return connection.rollback(function () {
+						return next(new AppError(err, 500));
+					});
+				}
+			});
+		});
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+};
