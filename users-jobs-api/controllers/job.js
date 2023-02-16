@@ -268,17 +268,45 @@ exports.deleteJob = async (req, res, next) => {
 		if (!req.params.job_id) {
 			return next(new AppError("No job job_id found", 404));
 		}
-		connection.query(
-			"DELETE FROM jobs WHERE job_id=?",
-			[req.params.job_id],
-			function (err, fields) {
-				if (err) return next(new AppError(err, 500));
-				res.status(201).json({
-					status: "success",
-					message: "job deleted!"
-				});
+
+		connection.beginTransaction(function (err) {
+			if (err) {
+				return next(new AppError(err, 500));
 			}
-		);
+
+			//query to delete the job's roles
+			connection.query(
+				"DELETE FROM jobs_roles WHERE job_id = ?",
+				[req.params.job_id],
+				function (err, result) {
+					if (err) {
+						return connection.rollback(function () {
+							return next(new AppError(err, 500));
+						});
+					}
+				}
+			);
+
+			connection.query(
+				"DELETE FROM jobs WHERE job_id=?",
+				[req.params.job_id],
+				function (err, fields) {
+					if (err) return next(new AppError(err, 500));
+					res.status(201).json({
+						status: "success",
+						message: "job deleted!"
+					});
+				}
+			);
+
+			connection.commit(function (err) {
+				if (err) {
+					return connection.rollback(function () {
+						return next(new AppError(err, 500));
+					});
+				}
+			});
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
