@@ -4,7 +4,7 @@ const connection = require("../services/db");
 async function checkJobExists(jobId) {
 	return new Promise((resolve, reject) => {
 		connection.query(
-			"SELECT 1 FROM jobs WHERE id = ?",
+			"SELECT 1 FROM jobs WHERE job_id = ?",
 			[jobId],
 			(err, data, fields) => {
 				if (err) {
