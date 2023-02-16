@@ -292,7 +292,7 @@ exports.deleteJob = async (req, res, next) => {
 				[req.params.job_id],
 				function (err, fields) {
 					if (err) return next(new AppError(err, 500));
-					res.status(201).json({
+					res.status(204).json({
 						status: "success",
 						message: "job deleted!"
 					});
