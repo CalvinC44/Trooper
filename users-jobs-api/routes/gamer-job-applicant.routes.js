@@ -10,23 +10,34 @@ const {
 } = require("../controllers/gamer-job-applicant.js");
 
 //middleware import
+const {
+	checkApplicantIdExists,
+	checkJobIdExists,
+	checkDuplicateApplication,
+	checkApplicationExists,
+	checkApplicationApproved
+} = require("../middleware/gamer-job-applicantMiddleware.js");
 
 //routes for gamers applications
-router.route("/applications/gamer/:gamer_id").get(getGamerJobsApplications);
+router
+	.route("/applications/gamer/:gamer_id")
+	.get(checkApplicantIdExists, getGamerJobsApplications); //for the gamer to get all their applications
 
 router
-	.route("/applications/gamer/:gamer_id/job/:job_id")
-	.post(applyForJob)
-	.delete(deleteApplication);
+	.route("/applications/job/:job_id")
+	.post(
+		[checkApplicantIdExists, checkJobIdExists, checkDuplicateApplication],
+		applyForJob
+	) //for the gamer to apply for a job
+	.delete([checkApplicationExists, checkApplicationApproved], deleteApplication) //for the gamer to delete an application
+	.get(checkApplicationExists, getJobApplications); //for the recruiter to all the applications for a job
 
-//routes for jobs applications to be handled by the job recruiter
-router.route("/applications/job/:job_id").get(getJobApplications);
-
+//routes for recruiters to approve or reject applications
 router
 	.route("/applications/job/:job_id/gamer/:gamer_id/approve")
-	.put(approveApplication);
+	.put([checkApplicationExists, checkApplicationApproved], approveApplication);
 router
 	.route("/applications/job/:job_id/gamer/:gamer_id/reject")
-	.put(rejectApplication);
+	.put([checkApplicationExists, checkApplicationApproved], rejectApplication);
 
 module.exports = router;
