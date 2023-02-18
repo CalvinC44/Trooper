@@ -6,7 +6,7 @@ exports.getGamerJobsApplications = async (req, res, next) => {
 	try {
 		const { gamer_id } = req.params;
 
-		const query = `SELECT job_name, job_id, application_state FROM gamers_jobs_applications INNER JOIN jobs ON gamers_jobs_applications.job_id = jobs.job_id WHERE gamer_id = ?`;
+		const query = `SELECT job_name, gamers_jobs_applications.job_id, application_state FROM gamers_jobs_applications INNER JOIN jobs ON gamers_jobs_applications.job_id = jobs.job_id WHERE gamer_id = ?`;
 		const values = [gamer_id];
 
 		connection.query(query, values, function (err, result) {
@@ -26,7 +26,8 @@ exports.getGamerJobsApplications = async (req, res, next) => {
 //function to make a gamer apply for a job
 exports.applyForJob = async (req, res, next) => {
 	try {
-		const { gamer_id, job_id } = req.params;
+		const { job_id } = req.params;
+		const { gamer_id } = req.body;
 
 		const query = `INSERT INTO gamers_jobs_applications (gamer_id, job_id) VALUES (?, ?)`;
 		const values = [gamer_id, job_id];
@@ -48,7 +49,8 @@ exports.applyForJob = async (req, res, next) => {
 //function for a gamer to delete an application for a job, //TODO MIDDLEWARE if the application is pending
 exports.deleteApplication = async (req, res, next) => {
 	try {
-		const { gamer_id, job_id } = req.params;
+		const { job_id } = req.params;
+		const { gamer_id } = req.body;
 
 		//update the application_state of the application
 		const query = `DELETE FROM gamers_jobs_applications WHERE gamer_id = ? AND job_id = ?`;
