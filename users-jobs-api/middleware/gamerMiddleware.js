@@ -145,6 +145,28 @@ async function updateTotalEarned(req, res, next) {
 	}
 }
 
+async function checkGamerExists(req, res, next) {
+	try {
+		const existingGamer = await new Promise((resolve, reject) => {
+			connection.query(
+				"SELECT * FROM gamers WHERE gamer_id = ?",
+				[req.params.gamer_id],
+				function (err, data, fields) {
+					if (err) return reject(err);
+					resolve(data);
+				}
+			);
+		});
+
+		if (existingGamer.length == 0) {
+			return next(new AppError("Gamer does not exist", 404));
+		}
+		next();
+	} catch (err) {
+		return next(new AppError(err, 500));
+	}
+}
+
 module.exports = {
 	checkUsername,
 	checkProfileType,
@@ -153,5 +175,6 @@ module.exports = {
 	checkHoursPerDay,
 	checkGamesExist,
 	checkRolesExist,
-	updateTotalEarned
+	updateTotalEarned,
+	checkGamerExists
 };
