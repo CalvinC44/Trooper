@@ -1,17 +1,27 @@
 const express = require("express");
 const gamerControllers = require("../controllers/gamer");
-const gamerMiddleware = require("../middleware/gamerMiddleware");
+const {
+	checkUsername,
+	checkProfileType,
+	checkBirthdateFormat,
+	checkMinHourRate,
+	checkHoursPerDay,
+	checkGamesExist,
+	checkRolesExist,
+	checkGamerExists,
+	updateTotalEarned
+} = require("../middleware/gamerMiddleware");
 const router = express.Router();
 
 //middleware for gamers creation and update
 const gamerMiddlewareCreateOrUpdate = [
-	gamerMiddleware.checkUsername,
-	gamerMiddleware.checkProfileType,
-	gamerMiddleware.checkBirthdateFormat,
-	gamerMiddleware.checkMinHourRate,
-	gamerMiddleware.checkHoursPerDay,
-	gamerMiddleware.checkGamesExist,
-	gamerMiddleware.checkRolesExist
+	checkUsername,
+	checkProfileType,
+	checkBirthdateFormat,
+	checkMinHourRate,
+	checkHoursPerDay,
+	checkGamesExist,
+	checkRolesExist
 ];
 
 //routes for gamers
@@ -22,13 +32,15 @@ router
 
 router
 	.route("/gamers/:gamer_id")
-	.get(gamerMiddleware.updateTotalEarned, gamerControllers.getGamer)
+	.get(updateTotalEarned, gamerControllers.getGamer)
 	.put(gamerMiddlewareCreateOrUpdate, gamerControllers.updateGamer)
 	.delete(gamerControllers.deleteGamer);
 
 // router.route("/gamer/gamer_id").get(gamerControllers.getGamerId);
 
-router.route("/gamers/:gamer_id/jobs").get(gamerControllers.getGamerJobs);
+router
+	.route("/gamers/:gamer_id/jobs")
+	.get(checkGamerExists, gamerControllers.getGamerJobs);
 
 router
 	.route("/gamers/:gamer_id/createdJobs")
