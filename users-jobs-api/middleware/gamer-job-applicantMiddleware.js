@@ -47,7 +47,6 @@ async function checkDuplicateApplication(req, res, next) {
 				return next(new AppError(err.message, 400));
 			}
 			if (result.length > 0) {
-				console.log(result);
 				return next(
 					new AppError(
 						"Duplicate application this gamer already applied for this job",
@@ -97,7 +96,10 @@ async function checkApplicationExists(req, res, next) {
 //function to check if application is already approved
 async function checkApplicationApproved(req, res, next) {
 	try {
-		const { job_id, gamer_id } = req.params;
+		const gamer_id = req.params.gamer_id
+			? req.params.gamer_id
+			: req.body.gamer_id;
+		const job_id = req.params.job_id;
 
 		const query = `SELECT * FROM gamers_jobs_applications WHERE job_id = ? AND gamer_id = ? AND application_state = ?`;
 		const values = [job_id, gamer_id, "Approved"];
@@ -107,7 +109,32 @@ async function checkApplicationApproved(req, res, next) {
 				return next(new AppError(err.message, 400));
 			}
 			if (result.length > 0) {
-				return next(new AppError("Application already approved", 400));
+				return next(new AppError("Application already been approved", 400));
+			}
+			next();
+		});
+	} catch (err) {
+		return next(new AppError(err.message, 400));
+	}
+}
+
+//function to check if application is already rejected
+async function checkApplicationRejected(req, res, next) {
+	try {
+		const gamer_id = req.params.gamer_id
+			? req.params.gamer_id
+			: req.body.gamer_id;
+		const job_id = req.params.job_id;
+
+		const query = `SELECT * FROM gamers_jobs_applications WHERE job_id = ? AND gamer_id = ? AND application_state = ?`;
+		const values = [job_id, gamer_id, "Rejected"];
+
+		connection.query(query, values, function (err, result) {
+			if (err) {
+				return next(new AppError(err.message, 400));
+			}
+			if (result.length > 0) {
+				return next(new AppError("Application already been rejected", 400));
 			}
 			next();
 		});
@@ -121,5 +148,6 @@ module.exports = {
 	checkJobIdExists,
 	checkDuplicateApplication,
 	checkApplicationExists,
-	checkApplicationApproved
+	checkApplicationApproved,
+	checkApplicationRejected
 };

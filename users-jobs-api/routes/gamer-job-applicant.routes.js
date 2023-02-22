@@ -15,7 +15,8 @@ const {
 	checkJobIdExists,
 	checkDuplicateApplication,
 	checkApplicationExists,
-	checkApplicationApproved
+	checkApplicationApproved,
+	checkApplicationRejected
 } = require("../middleware/gamer-job-applicantMiddleware.js");
 
 //routes for gamers applications
@@ -29,7 +30,14 @@ router
 		[checkApplicantIdExists, checkJobIdExists, checkDuplicateApplication],
 		applyForJob
 	) //for the gamer to apply for a job
-	.delete([checkApplicationExists, checkApplicationApproved], deleteApplication) //for the gamer to delete an application
+	.delete(
+		[
+			checkApplicationExists,
+			checkApplicationApproved,
+			checkApplicationRejected
+		],
+		deleteApplication
+	) //for the gamer to delete an application
 	.get(checkApplicationExists, getJobApplications); //for the recruiter to all the applications for a job
 
 //routes for recruiters to approve or reject applications
@@ -38,6 +46,13 @@ router
 	.put([checkApplicationExists, checkApplicationApproved], approveApplication);
 router
 	.route("/applications/job/:job_id/gamer/:gamer_id/reject")
-	.put([checkApplicationExists, checkApplicationApproved], rejectApplication);
+	.put(
+		[
+			checkApplicationExists,
+			checkApplicationApproved,
+			checkApplicationRejected
+		],
+		rejectApplication
+	);
 
 module.exports = router;
