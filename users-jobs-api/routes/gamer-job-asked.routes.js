@@ -5,8 +5,8 @@ const {
 	askGamerForJob,
 	deleteJobAsked,
 	getJobAskedGamers,
-	approveJobAsked,
-	rejectJobAsked
+	acceptJobAsked,
+	refuseJobAsked
 } = require("../controllers/gamer-job-asked.js");
 
 //midlleware import
@@ -22,7 +22,7 @@ router
 //routes for gamers being asked for jobs by recruiters
 router.route("/asked/job/:job_id").get(getGamerJobsAsked);
 
-router.route("/asked/job/:job_id/gamer/:gamer_id/approve").put(approveJobAsked);
-router.route("/asked/job/:job_id/gamer/:gamer_id/reject").put(rejectJobAsked);
+router.route("/asked/job/:job_id/gamer/:gamer_id/accept").put(acceptJobAsked);
+router.route("/asked/job/:job_id/gamer/:gamer_id/refuse").put(refuseJobAsked);
 
 module.exports = router;
