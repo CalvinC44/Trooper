@@ -21,7 +21,7 @@ const {
 
 //routes for gamers applications
 router
-	.route("/applications/gamer/:gamer_id")
+	.route("/applications/gamer")
 	.get(checkApplicantIdExists, getGamerJobsApplications); //for the gamer to get all their applications
 
 router
@@ -38,7 +38,7 @@ router
 		],
 		deleteApplication
 	) //for the gamer to delete an application
-	.get(checkApplicationExists, getJobApplications); //for the recruiter to all the applications for a job
+	.get(getJobApplications); //for the recruiter to all the applications for a job
 
 //routes for recruiters to approve or reject applications
 router
