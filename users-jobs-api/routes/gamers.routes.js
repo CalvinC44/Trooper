@@ -34,7 +34,7 @@ router
 	.route("/gamers/:gamer_id")
 	.get(updateTotalEarned, gamerControllers.getGamer)
 	.put(gamerMiddlewareCreateOrUpdate, gamerControllers.updateGamer)
-	.delete(gamerControllers.deleteGamer);
+	.delete([checkGamerExists], gamerControllers.deleteGamer);
 
 // router.route("/gamer/gamer_id").get(gamerControllers.getGamerId);
 
