@@ -1,20 +1,13 @@
 const AppError = require("../utils/appError");
-const connection = require("../services/db");
+const { pool } = require("../services/db");
 const checkRoleExists = require("./checkRoleExists");
 const checkGameExists = require("./checkGameExists");
 
 async function checkUsername(req, res, next) {
 	try {
-		const existingUser = await new Promise((resolve, reject) => {
-			connection.query(
-				"SELECT * FROM gamers WHERE username = ?",
-				[req.body.username],
-				function (err, data, fields) {
-					if (err) return reject(err);
-					resolve(data);
-				}
-			);
-		});
+		const [existingUser] = await pool
+			.promise()
+			.execute("SELECT * FROM gamers WHERE username = ?", [req.body.username]);
 
 		if (existingUser.length == 0) {
 			next();
@@ -118,28 +111,31 @@ async function updateTotalEarned(req, res, next) {
 		return next(new AppError("No gamer gamer_id found", 404));
 	}
 	try {
-		connection.query(
+		const connection = await pool.promise().getConnection();
+		await connection.beginTransaction();
+
+		//get the total_earned of the gamer
+		const [data] = await connection.execute(
 			"SELECT SUM(payment_amount) AS total_earned FROM jobs WHERE chosen_gamer_id = ? AND job_state = 'Done'",
-			[req.params.gamer_id],
-			function (err, data, fields) {
-				if (err) return next(new AppError(err, 500));
-
-				let totalEarned = data[0].total_earned;
-				//if the gamer has no jobs done, so result is null, set total_earned to 0
-				if (totalEarned == null) {
-					totalEarned = 0;
-				}
-
-				connection.query(
-					"UPDATE gamers SET total_earned = ? WHERE gamer_id = ?",
-					[totalEarned, req.params.gamer_id],
-					function (err, data, fields) {
-						if (err) return next(new AppError(err, 500));
-						next();
-					}
-				);
-			}
+			[req.params.gamer_id]
 		);
+
+		let totalEarned = data[0].total_earned;
+		//if the gamer has no jobs done, so result is null, set total_earned to 0
+		if (totalEarned == null) {
+			totalEarned = 0;
+		}
+
+		//update the total_earned of the gamer
+		await connection.execute(
+			"UPDATE gamers SET total_earned = ? WHERE gamer_id = ?",
+			[totalEarned, req.params.gamer_id]
+		);
+
+		await connection.commit();
+		connection.release();
+
+		next();
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
@@ -147,18 +143,12 @@ async function updateTotalEarned(req, res, next) {
 
 async function checkGamerExists(req, res, next) {
 	try {
-		const existingGamer = await new Promise((resolve, reject) => {
-			connection.query(
-				"SELECT * FROM gamers WHERE gamer_id = ?",
-				[req.params.gamer_id],
-				function (err, data, fields) {
-					if (err) return reject(err);
-					resolve(data);
-				}
-			);
-		});
-
-		if (existingGamer.length == 0) {
+		const [rows, fields] = await pool
+			.promise()
+			.execute("SELECT * FROM gamers WHERE gamer_id = ?", [
+				req.params.gamer_id
+			]);
+		if (rows.length == 0) {
 			return next(new AppError("Gamer does not exist", 404));
 		}
 		next();

@@ -1,24 +1,15 @@
-const connection = require("../services/db");
+const { pool } = require("../services/db");
 
 // function to check if the job exists
 async function checkJobExists(jobId) {
-	return new Promise((resolve, reject) => {
-		connection.query(
-			"SELECT 1 FROM jobs WHERE job_id = ?",
-			[jobId],
-			(err, data, fields) => {
-				if (err) {
-					reject(err);
-				} else {
-					if (data.length > 0) {
-						resolve(true);
-					} else {
-						resolve(false);
-					}
-				}
-			}
-		);
-	});
+	try {
+		const [rows] = await pool
+			.promise()
+			.execute("SELECT 1 FROM jobs WHERE job_id = ?", [jobId]);
+		return rows.length > 0;
+	} catch (error) {
+		throw error;
+	}
 }
 
 module.exports = checkJobExists;

@@ -1,5 +1,5 @@
 const AppError = require("../utils/appError");
-const connection = require("../services/db");
+const { pool } = require("../services/db");
 const checkUserExists = require("../middleware/checkUserExists");
 const checkGameExists = require("./checkGameExists");
 const checkRoleExists = require("./checkRoleExists");
@@ -7,16 +7,9 @@ const checkRoleExists = require("./checkRoleExists");
 //function to check if job exists if it is set in the params
 async function checkJobExists(req, res, next) {
 	try {
-		const existingJob = await new Promise((resolve, reject) => {
-			connection.query(
-				"SELECT 1 FROM jobs WHERE job_id = ?",
-				[req.params.job_id],
-				function (err, data, fields) {
-					if (err) return reject(err);
-					resolve(data);
-				}
-			);
-		});
+		const [existingJob] = await pool
+			.promise()
+			.execute("SELECT 1 FROM jobs WHERE job_id = ?", [req.params.job_id]);
 		if (existingJob.length == 0) {
 			return next(new AppError("Job not found", 404));
 		} else {
@@ -182,17 +175,12 @@ async function checkChosenGamerIsNotRecruiter(req, res, next) {
 //function to check if job is done, if it is, then it cannot be modified
 async function checkJobIsDone(req, res, next) {
 	try {
-		const existingJob = await new Promise((resolve, reject) => {
-			connection.query(
-				"SELECT job_state FROM jobs WHERE job_id = ?",
-				[req.params.job_id],
-				function (err, data, fields) {
-					if (err) reject(err);
-					resolve(data);
-				}
-			);
-		});
-		if (existingJob[0].job_state == "Done") {
+		const [connection] = await pool
+			.promise()
+			.execute("SELECT job_state FROM jobs WHERE job_id = ?", [
+				req.params.job_id
+			]);
+		if (connection[0].job_state == "Done") {
 			return next(new AppError("Job is done, it cannot be modified", 400));
 		}
 		next();

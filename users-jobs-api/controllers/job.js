@@ -1,17 +1,18 @@
 const AppError = require("../utils/appError");
-const connection = require("../services/db");
+const { pool } = require("../services/db");
 const uuidv4 = require("uuid").v4;
 
 //function to create a job, require a job_name and the recruiter_id, others are optional, job_state is set to Available by default
 exports.createJob = async (req, res, next) => {
+	if (!req.body) return next(new AppError("No form data found", 404));
+	if (!req.body.recruiter_id)
+		return next(new AppError("No recruiter_id found", 404));
+	if (!req.body.job_name) return next(new AppError("No job_name found"));
+
+	const connection = await pool.promise().getConnection();
+
 	try {
-		if (!req.body.recruiter_id) {
-			return next(new AppError("No recruiter_id found", 404));
-		}
-		if (!req.body) return next(new AppError("No form data found", 404));
-		if (!req.body.job_name) return next(new AppError("No job_name found"));
-		if (!req.body.recruiter_id)
-			return next(new AppError("No recruiter_id found"));
+		await connection.beginTransaction();
 
 		//generate a unique job_id for the job
 		const job_id = uuidv4();
@@ -42,74 +43,45 @@ exports.createJob = async (req, res, next) => {
 		}
 		query += ")";
 
-		connection.beginTransaction(function (err) {
-			if (err) {
-				return next(new AppError(err, 500));
-			}
+		//execute query to create the job
+		await connection.query(query, values);
 
-			//query to create the job
-			connection.query(query, values, function (err, result) {
-				if (err) {
-					return connection.rollback(function () {
-						return next(new AppError(err, 500));
-					});
-				}
-
-				if (req.body.roles_id) {
-					const roleValues = req.body.roles_id.map((role_id) => [
-						job_id,
-						role_id
-					]);
-					const roleQuery = "INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
-					connection.query(roleQuery, [roleValues], function (err, result) {
-						if (err) {
-							return connection.rollback(function () {
-								return next(new AppError(err, 500));
-							});
-						}
-						connection.commit(function (err) {
-							if (err) {
-								return connection.rollback(function () {
-									return next(new AppError(err, 500));
-								});
-							}
-							res.status(201).json({
-								status: "success",
-								message: "Job created successfully",
-								data: {
-									job_id: job_id
-								}
-							});
-						});
-					});
-				} else {
-					connection.commit(function (err) {
-						if (err) {
-							return connection.rollback(function () {
-								return next(new AppError(err, 500));
-							});
-						}
-						res.status(201).json({
-							status: "success",
-							message: "Job created successfully",
-							data: {
-								job_id: job_id
-							}
-						});
-					});
-				}
+		//if roles_id is set, create the link between the job and the roles
+		if (req.body.roles_id) {
+			// const roleValues = req.body.roles_id.map((role_id) => [job_id, role_id]);
+			// const roleQuery = "INSERT INTO jobs_roles (job_id, role_id) VALUES ?";
+			let roleValues = [];
+			let roleQuery = "INSERT INTO jobs_roles (job_id, role_id) VALUES";
+			req.body.roles_id.forEach((role_id) => {
+				roleValues.push(job_id);
+				roleValues.push(role_id);
+				roleQuery += " (?, ?),";
 			});
+			roleQuery = roleQuery.slice(0, -1);
+			await connection.execute(roleQuery, roleValues);
+		}
+
+		await connection.commit();
+
+		res.status(201).json({
+			status: "success",
+			message: "Job created successfully",
+			data: {
+				job_id: job_id
+			}
 		});
 	} catch (err) {
+		await connection.rollback();
 		return next(new AppError(err, 500));
+	} finally {
+		connection.release();
 	}
 };
 
 //function to get all jobs, require no parameters
 exports.getAllJobs = async (req, res, next) => {
 	try {
-		// get all jobs
-		connection.query(
+		const [rows] = await pool.promise().execute(
 			`SELECT jobs.*, 
 			GROUP_CONCAT(roles.role_name) as roles, 
 			GROUP_CONCAT(gamers_jobs_applications.gamer_id) as applicants, 
@@ -119,16 +91,14 @@ exports.getAllJobs = async (req, res, next) => {
 			LEFT JOIN roles ON jobs_roles.role_id = roles.id 
 			LEFT JOIN gamers_jobs_applications ON jobs.job_id = gamers_jobs_applications.job_id
 			LEFT JOIN gamers_jobs_asked ON jobs.job_id = gamers_jobs_asked.job_id
-			GROUP BY jobs.job_id`,
-			function (err, data, fields) {
-				if (err) return next(new AppError(err));
-				res.status(200).json({
-					status: "success",
-					length: data?.length,
-					data: data
-				});
-			}
+			GROUP BY jobs.job_id`
 		);
+
+		res.status(200).json({
+			status: "success",
+			length: rows?.length,
+			data: rows
+		});
 	} catch (err) {
 		return next(new AppError(err, 500));
 	}
@@ -136,11 +106,10 @@ exports.getAllJobs = async (req, res, next) => {
 
 //function to get specific job using its job_id
 exports.getJob = async (req, res, next) => {
+	if (!req.params.job_id) return next(new AppError("No job job_id found", 404));
 	try {
-		if (!req.params.job_id) {
-			return next(new AppError("No job job_id found", 404));
-		}
-		const query = `SELECT jobs.*, 
+		const [rows] = await pool.promise().execute(
+			`SELECT jobs.*, 
 					GROUP_CONCAT(roles.role_name) as roles, 
 					GROUP_CONCAT(gamers_jobs_applications.gamer_id) as applicants, 
 					GROUP_CONCAT(gamers_jobs_asked.gamer_id) as asked_gamers 
@@ -148,14 +117,14 @@ exports.getJob = async (req, res, next) => {
 					LEFT JOIN roles ON jobs_roles.role_id = roles.id 
 					LEFT JOIN gamers_jobs_applications ON jobs.job_id = gamers_jobs_applications.job_id
 					LEFT JOIN gamers_jobs_asked ON jobs.job_id = gamers_jobs_asked.job_id
-					WHERE jobs.job_id = ? GROUP BY jobs.job_id`;
-		connection.query(query, [req.params.job_id], function (err, data, fields) {
-			if (err) return next(new AppError(err, 500));
-			res.status(200).json({
-				status: "success",
-				length: data?.length,
-				data: data
-			});
+					WHERE jobs.job_id = ? GROUP BY jobs.job_id`,
+			[req.params.job_id]
+		);
+
+		res.status(200).json({
+			status: "success",
+			length: rows.length,
+			data: rows
 		});
 	} catch (err) {
 		return next(new AppError(err, 500));
@@ -164,151 +133,111 @@ exports.getJob = async (req, res, next) => {
 
 //function to update a job
 exports.updateJob = async (req, res, next) => {
+	if (!req.params.job_id) return next(new AppError("No job job_id found", 404));
+	if (!req.body) return next(new AppError("No form data found", 404));
+
+	const connection = await pool.promise().getConnection();
+
 	try {
-		if (!req.params.job_id) {
-			return next(new AppError("No job job_id found", 404));
-		}
-		if (!req.body) return next(new AppError("No form data found", 404));
+		await connection.beginTransaction();
 
-		connection.beginTransaction(function (err) {
-			if (err) {
-				return next(new AppError(err, 500));
-			}
+		if (
+			req.body.job_name ||
+			req.body.short_description ||
+			req.body.description ||
+			req.body.game_id ||
+			req.body.duration
+		) {
+			let query = "UPDATE jobs SET ";
+			let values = [];
 
-			if (
-				req.body.job_name ||
-				req.body.short_description ||
-				req.body.description ||
-				req.body.game_id ||
-				req.body.duration
-			) {
-				let query = "UPDATE jobs SET ";
-				let values = [];
+			const columnMap = {
+				job_name: "job_name",
+				short_description: "short_description",
+				description: "description",
+				game_id: "game_id",
+				duration: "duration"
+			};
 
-				const columnMap = {
-					job_name: "job_name",
-					short_description: "short_description",
-					description: "description",
-					game_id: "game_id",
-					duration: "duration"
-				};
-
-				Object.keys(columnMap).forEach((key) => {
-					if (req.body[key]) {
-						query += `${columnMap[key]} = ?, `;
-						values.push(req.body[key]);
-					}
-				});
-
-				query = query.slice(0, -2);
-				query += " WHERE job_id=?";
-				values.push(req.params.job_id);
-
-				//query to update the job details, if there are any
-				connection.query(query, values, function (err, result) {
-					if (err) {
-						return connection.rollback(function () {
-							return next(new AppError(err, 500));
-						});
-					}
-				});
-			}
-
-			if (req.body.roles_id) {
-				//query to delete all the roles of the job
-				connection.query(
-					"DELETE FROM jobs_roles WHERE job_id = ?",
-					[req.params.job_id],
-					function (err, result) {
-						if (err) {
-							return connection.rollback(function () {
-								return next(new AppError(err, 500));
-							});
-						}
-					}
-				);
-
-				//query to insert the new roles of the job if any
-				if (req.body.roles_id.length > 0) {
-					const roleValues = req.body.roles_id.map((role_id) => [
-						req.params.job_id,
-						role_id
-					]);
-					const roleQuery = `INSERT INTO jobs_roles (job_id, role_id) VALUES ?`;
-					connection.query(roleQuery, [roleValues], function (err, result) {
-						if (err) {
-							return connection.rollback(function () {
-								return next(new AppError(err, 500));
-							});
-						}
-					});
+			Object.keys(columnMap).forEach((key) => {
+				if (req.body[key]) {
+					query += `${columnMap[key]} = ?, `;
+					values.push(req.body[key]);
 				}
-			}
-
-			connection.commit(function (err) {
-				if (err) {
-					return connection.rollback(function () {
-						return next(new AppError(err, 500));
-					});
-				}
-				res.status(200).json({
-					status: "success",
-					message: "Job updated successfully"
-				});
 			});
+
+			query = query.slice(0, -2);
+			query += " WHERE job_id=?";
+			values.push(req.params.job_id);
+
+			await connection.execute(query, values);
+		}
+
+		if (req.body.roles_id) {
+			await connection.execute("DELETE FROM jobs_roles WHERE job_id = ?", [
+				req.params.job_id
+			]);
+
+			if (req.body.roles_id.length > 0) {
+				// const roleValues = req.body.roles_id.map((role_id) => [
+				// 	req.params.job_id,
+				// 	role_id
+				// ]);
+				// const roleQuery = `INSERT INTO jobs_roles (job_id, role_id) VALUES ?`;
+				// await connection.execute(roleQuery, [roleValues]);
+
+				let roleQuery = `INSERT INTO jobs_roles (job_id, role_id) VALUES `;
+				let roleValues = [];
+				req.body.roles_id.forEach((role_id) => {
+					roleQuery += "(?, ?), ";
+					roleValues.push(req.params.job_id, role_id);
+				});
+				roleQuery = roleQuery.slice(0, -2);
+				await connection.execute(roleQuery, roleValues);
+			}
+		}
+
+		await connection.commit();
+
+		res.status(200).json({
+			status: "success",
+			message: "Job updated successfully"
 		});
 	} catch (err) {
+		await connection.rollback();
 		return next(new AppError(err, 500));
+	} finally {
+		connection.release();
 	}
 };
 
 //function to delete a job using its job_id
 exports.deleteJob = async (req, res, next) => {
+	if (!req.params.job_id) return next(new AppError("No job job_id found", 404));
+
+	const connection = await pool.promise().getConnection();
+
 	try {
-		if (!req.params.job_id) {
-			return next(new AppError("No job job_id found", 404));
-		}
+		await connection.beginTransaction();
 
-		connection.beginTransaction(function (err) {
-			if (err) {
-				return next(new AppError(err, 500));
-			}
+		await connection.execute("DELETE FROM jobs_roles WHERE job_id = ?", [
+			req.params.job_id
+		]);
+		await connection.execute("DELETE FROM jobs WHERE job_id=?", [
+			req.params.job_id
+		]);
 
-			//query to delete the job's roles
-			connection.query(
-				"DELETE FROM jobs_roles WHERE job_id = ?",
-				[req.params.job_id],
-				function (err, result) {
-					if (err) {
-						return connection.rollback(function () {
-							return next(new AppError(err, 500));
-						});
-					}
-				}
-			);
+		await connection.commit();
 
-			connection.query(
-				"DELETE FROM jobs WHERE job_id=?",
-				[req.params.job_id],
-				function (err, fields) {
-					if (err) return next(new AppError(err, 500));
-					res.status(204).json({
-						status: "success",
-						message: "job deleted!"
-					});
-				}
-			);
-
-			connection.commit(function (err) {
-				if (err) {
-					return connection.rollback(function () {
-						return next(new AppError(err, 500));
-					});
-				}
-			});
+		res.status(204).json({
+			status: "success",
+			message: "job deleted successfully"
 		});
 	} catch (err) {
+		await connection.rollback();
 		return next(new AppError(err, 500));
+	} finally {
+		connection.release();
 	}
 };
 
