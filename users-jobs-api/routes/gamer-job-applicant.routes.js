@@ -13,11 +13,11 @@ const {
 const {
 	checkApplicantIdExists,
 	checkJobIdExists,
-	checkDuplicateApplication,
 	checkApplicationExists,
 	checkApplicationApproved,
-	checkApplicationRejected
-} = require("../middleware/gamer-job-applicantMiddleware.js");
+	checkApplicationRejected,
+	checkDuplicateGamerJobRelationship
+} = require("../middleware/gamer-jobMiddleware.js");
 
 //routes for gamers applications
 router
@@ -27,7 +27,11 @@ router
 router
 	.route("/applications/job/:job_id")
 	.post(
-		[checkApplicantIdExists, checkJobIdExists, checkDuplicateApplication],
+		[
+			checkApplicantIdExists,
+			checkJobIdExists,
+			checkDuplicateGamerJobRelationship
+		],
 		applyForJob
 	) //for the gamer to apply for a job
 	.delete(
