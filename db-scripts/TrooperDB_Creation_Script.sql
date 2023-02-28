@@ -115,12 +115,12 @@ CREATE TABLE gamers_jobs_applications (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );
 
-CREATE TABLE gamers_jobs_asked (
+CREATE TABLE gamers_jobs_offers (
     gamer_id CHAR(36) NOT NULL,
     job_id CHAR(36) NOT NULL,
     PRIMARY KEY (gamer_id, job_id),
-    asked_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    recruitment_state ENUM ('Pending', 'Accepted', 'Refused') DEFAULT 'Pending',
+    offer_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    job_offer_state ENUM ('Pending', 'Accepted', 'Refused') DEFAULT 'Pending',
     FOREIGN KEY (gamer_id) REFERENCES gamers(gamer_id),
     FOREIGN KEY (job_id) REFERENCES jobs(job_id)
 );
